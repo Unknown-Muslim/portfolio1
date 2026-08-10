@@ -1,6 +1,6 @@
-@layer base;
-@layer components;
-@layer utilities;
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
 
 * {
   margin: 0;
