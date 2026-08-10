@@ -1,0 +1,47 @@
+@layer base;
+@layer components;
+@layer utilities;
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html {
+  background: #141619;
+}
+
+body {
+  font-family: var(--font-body), system-ui, -apple-system, sans-serif;
+  background: #141619;
+  color: #181b1f;
+  overflow-x: hidden;
+}
+
+h1, h2, h3, h4, h5, h6 {
+  font-family: var(--font-display), system-ui, sans-serif;
+}
+
+::-webkit-scrollbar {
+  width: 8px;
+}
+::-webkit-scrollbar-track {
+  background: #f2f4f6;
+}
+::-webkit-scrollbar-thumb {
+  background: #c3ccd1;
+  border-radius: 4px;
+}
+::selection {
+  background: #00e0ff;
+  color: #181b1f;
+}
+
+/* ---------- Intro: falling-letters typography ---------- */
+.intro-mono {
+  font-family: 'Courier New', ui-monospace, Menlo, Consolas, monospace;
+  font-weight: 900;
+  -webkit-text-stroke: 1px rgba(255, 255, 255, 0.15);
+  letter-spacing: -0.02em;
+}
