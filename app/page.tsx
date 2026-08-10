@@ -5,7 +5,6 @@ import {ScrollTrigger} from 'gsap/dist/ScrollTrigger';
 import Intro from './components/Intro';
 import ProcessStack from './components/ProcessStack';
 import WorkCarousel from './components/WorkCarousel';
-import TechStack from './components/TechStack';
 import { CYAN, LIME, ULTRAVIOLET, ACCENTS, CHARCOAL, SLATE, WHITE, ICE_SILVER, SOFT_GRAY, DARK } from './theme';
 
 gsap.registerPlugin(ScrollTrigger);
@@ -23,7 +22,6 @@ export default function Portfolio() {
   const workStackRef = useRef<HTMLDivElement>(null);
   const aboutStackRef = useRef<HTMLDivElement>(null);
   const processAnchorRef = useRef<HTMLDivElement>(null);
-  const techStackAnchorRef = useRef<HTMLDivElement>(null);
   // Plain, non-sticky markers placed at the top of each section, used only
   // as ScrollTrigger trigger targets. position:sticky elements make
   // unreliable ScrollTrigger triggers - once an element is stuck, its
@@ -89,7 +87,7 @@ export default function Portfolio() {
       // since neither Hero nor About is itself pinned, only sticky.
       const stackPairs: [HTMLDivElement | null, HTMLDivElement | null][] = [
         [heroStackRef.current, workStackRef.current],
-        [aboutStackRef.current, techStackAnchorRef.current],
+        [aboutStackRef.current, processAnchorRef.current],
       ];
       stackPairs.forEach(([current, next]) => {
         if (!current || !next) return;
@@ -257,10 +255,6 @@ export default function Portfolio() {
       </div>
 
       <div ref={processMarkerRef} />
-      <div ref={techStackAnchorRef}>
-        <TechStack />
-      </div>
-
       <div ref={processAnchorRef}>
         <ProcessStack />
       </div>
