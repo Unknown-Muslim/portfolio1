@@ -1,4 +1,4 @@
-// Content-Security-Policy is set dynamically per-request in middleware.ts
+// Content-Security-Policy is set dynamically per-request in proxy.ts
 // (needs a random nonce each request, so it can't live in this static
 // config). Everything below doesn't need per-request dynamism, so it's
 // fine as a static header list here.

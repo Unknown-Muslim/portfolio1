@@ -5,14 +5,10 @@ import {ScrollTrigger} from 'gsap/dist/ScrollTrigger';
 import Intro from './components/Intro';
 import ProcessStack from './components/ProcessStack';
 import WorkCarousel from './components/WorkCarousel';
+import TechStack from './components/TechStack';
 import { CYAN, LIME, ULTRAVIOLET, ACCENTS, CHARCOAL, SLATE, WHITE, ICE_SILVER, SOFT_GRAY, DARK } from './theme';
 
 gsap.registerPlugin(ScrollTrigger);
-
-// Lightweight inline SVG grain - no network request, no image file needed.
-// Still used by the About section's monogram card below.
-const GRAIN =
-  "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E";
 
 export default function Portfolio() {
   const [faq, setFaq] = useState<number | null>(null);
@@ -22,6 +18,7 @@ export default function Portfolio() {
   const workStackRef = useRef<HTMLDivElement>(null);
   const aboutStackRef = useRef<HTMLDivElement>(null);
   const processAnchorRef = useRef<HTMLDivElement>(null);
+  const techStackAnchorRef = useRef<HTMLDivElement>(null);
   // Plain, non-sticky markers placed at the top of each section, used only
   // as ScrollTrigger trigger targets. position:sticky elements make
   // unreliable ScrollTrigger triggers - once an element is stuck, its
@@ -87,7 +84,7 @@ export default function Portfolio() {
       // since neither Hero nor About is itself pinned, only sticky.
       const stackPairs: [HTMLDivElement | null, HTMLDivElement | null][] = [
         [heroStackRef.current, workStackRef.current],
-        [aboutStackRef.current, processAnchorRef.current],
+        [aboutStackRef.current, techStackAnchorRef.current],
       ];
       stackPairs.forEach(([current, next]) => {
         if (!current || !next) return;
@@ -189,26 +186,45 @@ export default function Portfolio() {
       <div ref={heroMarkerRef} />
       <div className="relative" style={{height: '200vh'}}>
         <div ref={heroStackRef} className="sticky top-0 z-10 h-screen w-full overflow-hidden" style={{backgroundColor: WHITE}}>
-          <section ref={heroRef} className="relative h-full flex items-center justify-center px-4 overflow-hidden">
-            {/* Soft neon glow fields - not centred, not symmetric, kept well behind the text */}
+          <section ref={heroRef} className="relative h-full flex items-center px-4 md:px-12 overflow-hidden">
+            {/* Soft neon glow fields - not centred, not symmetric, kept well behind the content */}
             <div className="absolute -top-24 -left-24 w-[420px] h-[420px] rounded-full opacity-25 blur-[100px] pointer-events-none" style={{background: CYAN}} />
             <div className="absolute top-1/3 -right-32 w-[480px] h-[480px] rounded-full opacity-20 blur-[110px] pointer-events-none" style={{background: ULTRAVIOLET}} />
             <div className="absolute -bottom-32 left-1/4 w-[380px] h-[380px] rounded-full opacity-20 blur-[100px] pointer-events-none" style={{background: LIME}} />
 
-            <div className="relative text-center max-w-5xl">
-              <h1 className="text-7xl md:text-9xl font-black mb-8 leading-tight" style={{color: CHARCOAL}}>
-                Normal is{' '}
-                <span className="relative inline-block">
-                  <span className="absolute inset-x-0 bottom-2 md:bottom-4 h-5 md:h-8 -z-10 rounded-sm" style={{backgroundColor: LIME, opacity: 0.5}} />
-                  Boring
-                </span>
-              </h1>
-              <p className="sub text-xl md:text-2xl font-light mb-12 max-w-2xl mx-auto" style={{color: SLATE}}>
-                I build fast, considered interfaces for people who'd rather ship something sharp than something safe.
-              </p>
-              <div className="flex gap-6 justify-center flex-wrap">
-                <button className="px-10 py-4 font-bold hover:opacity-90 active:scale-[0.97] transition text-sm uppercase" style={{backgroundColor: CYAN, color: CHARCOAL}}>See My Work</button>
-                <button className="px-10 py-4 border-2 font-bold active:scale-[0.97] transition text-sm uppercase" style={{borderColor: CHARCOAL, color: CHARCOAL}} onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = CHARCOAL; e.currentTarget.style.color = WHITE; }} onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = 'transparent'; e.currentTarget.style.color = CHARCOAL; }}>Let's Talk</button>
+            <div className="relative max-w-7xl mx-auto w-full grid md:grid-cols-2 gap-12 md:gap-16 items-center">
+              <div>
+                <h1 className="text-6xl md:text-7xl lg:text-8xl font-black mb-8 leading-[1.05]" style={{color: CHARCOAL}}>
+                  Normal is{' '}
+                  <span className="relative inline-block">
+                    <span className="absolute inset-x-0 bottom-1 md:bottom-3 h-4 md:h-7 -z-10 rounded-sm" style={{backgroundColor: LIME, opacity: 0.5}} />
+                    Boring
+                  </span>
+                </h1>
+                <p className="sub text-xl md:text-2xl font-light mb-12 max-w-lg" style={{color: SLATE}}>
+                  I build fast, considered interfaces for people who'd rather ship something sharp than something safe.
+                </p>
+                <div className="flex gap-6 flex-wrap">
+                  <button className="px-10 py-4 font-bold hover:opacity-90 active:scale-[0.97] transition text-sm uppercase" style={{backgroundColor: CYAN, color: CHARCOAL}}>See My Work</button>
+                  <button className="px-10 py-4 border-2 font-bold active:scale-[0.97] transition text-sm uppercase" style={{borderColor: CHARCOAL, color: CHARCOAL}} onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = CHARCOAL; e.currentTarget.style.color = WHITE; }} onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = 'transparent'; e.currentTarget.style.color = CHARCOAL; }}>Let's Talk</button>
+                </div>
+              </div>
+
+              {/* TODO(Akhi): swap for a real portrait/workspace photo at
+                  /public/hero.jpg - keep the grayscale + accent-tint
+                  treatment below if you want it to match the rest of the
+                  site's palette, or drop the filter entirely for a plain
+                  full-colour photo once it's real. */}
+              <div className="relative rounded-2xl overflow-hidden border border-black/10 aspect-[4/5] max-h-[65vh] mx-auto w-full shadow-xl">
+                <img
+                  src="https://picsum.photos/seed/adam-sidat-hero-portrait/800/1000"
+                  alt=""
+                  className="absolute inset-0 w-full h-full object-cover"
+                  style={{filter: 'grayscale(1) contrast(1.1) brightness(0.95)'}}
+                />
+                <div className="absolute inset-0 mix-blend-color" style={{backgroundColor: ULTRAVIOLET, opacity: 0.16}} />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/35 via-transparent to-transparent" />
+                <div className="absolute bottom-6 left-6 w-10 h-[3px]" style={{backgroundColor: CYAN}} />
               </div>
             </div>
           </section>
@@ -241,13 +257,39 @@ export default function Portfolio() {
                   Outside of code I'm usually lifting, running, or working through calisthenics. If I'm not at a screen, I'm probably moving. I keep up an alimiya class most weeks too, and I share my desk with a cat who has strong opinions about my keyboard.
                 </p>
               </div>
-              <div className="relative rounded-lg aspect-square max-h-[50vh] overflow-hidden border border-black/10 flex items-center justify-center mx-auto">
-                {/* TODO(Akhi): swap this for a real photo - <img src="/about.jpg" className="absolute inset-0 w-full h-full object-cover" /> */}
-                <div className="absolute inset-0" style={{background: `linear-gradient(140deg, ${CYAN} 0%, ${ULTRAVIOLET} 55%, ${LIME} 100%)`}}>
-                  <div className="absolute inset-0 opacity-[0.08] mix-blend-overlay" style={{backgroundImage: `url("${GRAIN}")`}} />
+              {/* TODO(Akhi): swap both seeds below for real photos at
+                  /public/about-1.jpg and /public/about-2.jpg - a training/
+                  running shot and a desk-with-cat shot would fit the copy
+                  best. Same grayscale + accent-tint treatment as the Hero
+                  photo, so the two sections feel like one consistent set
+                  rather than two different styles. */}
+              <div className="relative h-[440px] md:h-[520px] w-full max-w-md mx-auto">
+                <div className="absolute top-0 right-0 w-[72%] h-[85%] rounded-2xl overflow-hidden border border-black/10 shadow-xl">
+                  <img
+                    src="https://picsum.photos/seed/adam-sidat-training-session/700/860"
+                    alt=""
+                    className="absolute inset-0 w-full h-full object-cover"
+                    style={{filter: 'grayscale(1) contrast(1.1) brightness(0.95)'}}
+                  />
+                  <div className="absolute inset-0 mix-blend-color" style={{backgroundColor: CYAN, opacity: 0.14}} />
                 </div>
-                <p className="relative text-[9rem] md:text-[11rem] font-black leading-none tracking-tighter select-none drop-shadow-lg" style={{color: CHARCOAL}}>AS</p>
-                <div className="absolute bottom-8 left-8 w-10 h-[3px]" style={{backgroundColor: CHARCOAL, opacity: 0.7}} />
+
+                <div className="absolute bottom-0 left-0 w-[52%] h-[52%] rounded-2xl overflow-hidden border-4 shadow-xl z-10" style={{borderColor: SOFT_GRAY}}>
+                  <img
+                    src="https://picsum.photos/seed/adam-sidat-desk-workspace-cat/520/520"
+                    alt=""
+                    className="absolute inset-0 w-full h-full object-cover"
+                    style={{filter: 'grayscale(1) contrast(1.1) brightness(0.95)'}}
+                  />
+                  <div className="absolute inset-0 mix-blend-color" style={{backgroundColor: ULTRAVIOLET, opacity: 0.16}} />
+                </div>
+
+                <div
+                  className="absolute top-4 left-4 w-16 h-16 rounded-full flex items-center justify-center text-lg font-black z-20 shadow-lg"
+                  style={{backgroundColor: LIME, color: CHARCOAL}}
+                >
+                  AS
+                </div>
               </div>
             </div>
           </section>
@@ -255,6 +297,10 @@ export default function Portfolio() {
       </div>
 
       <div ref={processMarkerRef} />
+      <div ref={techStackAnchorRef}>
+        <TechStack />
+      </div>
+
       <div ref={processAnchorRef}>
         <ProcessStack />
       </div>

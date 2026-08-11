@@ -3,7 +3,7 @@
 import React, { useEffect, useRef, useMemo } from 'react';
 import * as THREE from 'three';
 import { Canvas, useFrame, useThree } from '@react-three/fiber';
-import { useGLTF, useAnimations, ContactShadows } from '@react-three/drei';
+import { useGLTF, useAnimations, ContactShadows, Environment, Lightformer, Sparkles } from '@react-three/drei';
 import gsap from 'gsap';
 import { ScrollTrigger } from 'gsap/dist/ScrollTrigger';
 
@@ -199,6 +199,53 @@ class SceneErrorBoundary extends React.Component<
     }
     return this.props.children;
   }
+}
+
+/* ============================================================================
+   BACKDROP - replaces the flat solid-colour background. Built as an
+   in-browser canvas texture (radial glow echoing the spotlight's direction,
+   fading to near-black at the edges) mapped onto a large inverted sphere.
+   Deliberately NOT using drei's HDR Environment presets for the visible
+   background - those fetch a real HDR file from an external CDN at
+   runtime, which is one more thing that can fail to load, adds real
+   network weight to the intro's critical path, and needs its own CSP
+   allowance. This is zero-network, generated once on mount, and identical
+   every time - safe on Vercel or anywhere else.
+============================================================================ */
+function useBackdropTexture() {
+  return useMemo(() => {
+    if (typeof document === 'undefined') return null;
+    const canvas = document.createElement('canvas');
+    canvas.width = 512;
+    canvas.height = 512;
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return null;
+
+    // Glow positioned toward the upper-left, echoing the spotlight's real
+    // position, fading through a dark charcoal midtone to near-black.
+    const gradient = ctx.createRadialGradient(150, 130, 10, 256, 256, 430);
+    gradient.addColorStop(0, '#413018');
+    gradient.addColorStop(0.28, '#1c1a1e');
+    gradient.addColorStop(0.65, '#0d0d10');
+    gradient.addColorStop(1, '#050506');
+    ctx.fillStyle = gradient;
+    ctx.fillRect(0, 0, 512, 512);
+
+    const texture = new THREE.CanvasTexture(canvas);
+    texture.colorSpace = THREE.SRGBColorSpace;
+    return texture;
+  }, []);
+}
+
+function Backdrop() {
+  const texture = useBackdropTexture();
+  if (!texture) return null;
+  return (
+    <mesh scale={[-1, 1, 1]} renderOrder={-1}>
+      <sphereGeometry args={[40, 32, 32]} />
+      <meshBasicMaterial map={texture} side={THREE.BackSide} fog={false} toneMapped={false} />
+    </mesh>
+  );
 }
 
 /* ============================================================================
@@ -467,18 +514,65 @@ function BookScene({ progressRef }: { progressRef: React.MutableRefObject<number
 
   return (
     <Canvas
-      shadows
+      shadows="soft"
       dpr={[1, 2]}
       gl={{ antialias: true, alpha: true }}
       camera={{ fov: 35, position: [0, 1.2, 8] }}
+      onCreated={({ gl }) => {
+        // ACES Filmic is what makes bright highlights roll off naturally
+        // instead of clipping to flat white - it's most of the difference
+        // between "3D render" and "looks like a photo". Without it, every
+        // light in this rig was doing the same job it does now, but the
+        // result read as flat/plasticky because highlights had nowhere to
+        // go but harsh white.
+        gl.toneMapping = THREE.ACESFilmicToneMapping;
+        gl.toneMappingExposure = 1.15;
+      }}
     >
-      <color attach="background" args={['#07070a']} />
+      <Backdrop />
+      <fogExp2 attach="fog" args={['#0a0a0c', 0.032]} />
       <CameraRig progressRef={progressRef} />
 
-      {/* Raised from 0.05 - book was reading as pitch black */}
-      <ambientLight intensity={0.2} />
-      {/* Faint fill so the shadow side of the book doesn't crush to pure silhouette */}
-      <directionalLight position={[-2, 1.5, -2]} intensity={0.08} color="#4a5a7a" />
+      {/* Base ambient - just enough that the shadow side of the book reads
+          as "dim room", not pure crushed black. */}
+      <ambientLight intensity={0.22} />
+
+      {/* Fill, from the original pass - keeps the cool shadow side of the
+          book from crushing to a silhouette against the warm key light. */}
+      <directionalLight position={[-2, 1.5, -2]} intensity={0.1} color="#4a5a7a" />
+
+      {/* Rim/kicker light - cool moonlight-ish blue, positioned behind and
+          to the side of the book. This is the classic third point in
+          3-point lighting: without it, the book's edge has nothing to
+          separate it from the dark backdrop, and the whole thing reads as
+          "flat cutout floating in a void" rather than a lit object with
+          real depth. */}
+      <directionalLight position={[3.4, 2.6, -3.6]} intensity={0.4} color="#6f9fff" />
+
+      {/* Low warm bounce - simulates the spotlight's light bouncing back up
+          off the table surface in front of the book. Subtle on purpose;
+          bounce light in a real room is always much dimmer than the
+          source. */}
+      <pointLight position={[0, -0.45, 1.6]} intensity={0.5} color="#ffb26b" distance={4.5} decay={2} />
+
+      {/* Procedural environment - three virtual light panels baked into a
+          tiny reflection probe, purely for specular highlights/reflections
+          on the book's materials (gilt edges, leather, any clasp hardware).
+          background={false} means this never becomes the visible backdrop -
+          Backdrop above already owns that. No HDR file, no network request:
+          drei renders these panels into an offscreen scene itself. */}
+      <Environment background={false} resolution={64}>
+        <Lightformer intensity={3} color="#fff4e0" position={[-3.2, 6, 2.4]} scale={[4, 4, 1]} form="rect" />
+        <Lightformer intensity={0.8} color="#6f9fff" position={[3.4, 2.6, -3.6]} scale={[3, 3, 1]} form="rect" />
+        <Lightformer intensity={0.4} color="#20222a" position={[0, -3, 2]} scale={[8, 8, 1]} form="rect" />
+      </Environment>
+
+      {/* Sparse background bokeh - distinct from LightBeam's tight dust
+          cone (that stays bound to the light shaft). This is a much wider,
+          dimmer, slower field further back, the kind of soft out-of-focus
+          specks a real lens picks up in a dim room. Motivated purely as an
+          atmosphere/depth cue for this one scene. */}
+      <Sparkles count={35} scale={[9, 5, 9]} size={2.2} speed={0.12} opacity={0.15} color="#ffe3b0" position={[0, 1, -1.5]} />
 
       <LightBeam bookTopYRef={bookTopYRef} />
 
@@ -639,7 +733,7 @@ export default function Intro() {
 
   return (
     <div ref={wrapperRef} className="relative" style={{ height: '1160vh' }}>
-      <div className="sticky top-0 h-screen w-full overflow-hidden bg-[#141414]">
+      <div className="sticky top-0 h-screen w-full overflow-hidden bg-[#141619]">
         <div ref={rainRef} className="absolute inset-0">
           <MatrixRain progressRef={progressRef} />
         </div>
@@ -647,6 +741,17 @@ export default function Intro() {
         <div ref={bookWrapRef} className="absolute inset-0 z-20">
           <BookScene progressRef={progressRef} />
         </div>
+
+        {/* Vignette - a real camera vignette is a screen-space effect
+            anyway, so a DOM overlay is the correct place for this, not
+            something baked into the 3D scene. Frames the book, keeps
+            attention off the flat corners. */}
+        <div
+          className="absolute inset-0 z-[21] pointer-events-none"
+          style={{
+            background: 'radial-gradient(ellipse at 50% 55%, transparent 35%, rgba(5,5,6,0.55) 100%)',
+          }}
+        />
 
         <WritingGoldName progressRef={progressRef} />
 
