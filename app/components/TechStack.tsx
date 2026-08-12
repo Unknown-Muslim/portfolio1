@@ -1,6 +1,8 @@
 'use client';
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
+import gsap from 'gsap';
+import { ScrollTrigger } from 'gsap/dist/ScrollTrigger';
 import {
   siFigma,
   siBlender,
@@ -15,6 +17,8 @@ import {
   siN8n,
 } from 'simple-icons';
 import { CHARCOAL, SLATE, ICE_SILVER } from '../theme';
+
+gsap.registerPlugin(ScrollTrigger);
 
 interface Tool {
   label: string;
@@ -71,9 +75,21 @@ function ToolPill({ tool }: { tool: Tool }) {
 
 export default function TechStack() {
   const [reduceMotion, setReduceMotion] = useState(false);
+  const headingRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     setReduceMotion(window.matchMedia('(prefers-reduced-motion: reduce)').matches);
+  }, []);
+
+  useEffect(() => {
+    if (!headingRef.current) return;
+    const ctx = gsap.context(() => {
+      gsap.from(headingRef.current!.children, {
+        scrollTrigger: {trigger: headingRef.current, start: 'top 88%'},
+        y: 26, opacity: 0, duration: 0.8, stagger: 0.12, ease: 'power4.out',
+      });
+    });
+    return () => ctx.revert();
   }, []);
 
   if (reduceMotion) {
@@ -82,8 +98,10 @@ export default function TechStack() {
     return (
       <section className="relative z-40 py-24 px-4 md:px-12" style={{ backgroundColor: ICE_SILVER }}>
         <div className="max-w-7xl mx-auto">
-          <p className="text-sm font-bold uppercase tracking-[0.25em] mb-4" style={{ color: SLATE }}>Tools & tech</p>
-          <h2 className="text-5xl md:text-6xl font-black mb-10" style={{ color: CHARCOAL }}>What I build with</h2>
+          <div ref={headingRef}>
+            <p className="text-sm font-bold uppercase tracking-[0.25em] mb-4" style={{ color: SLATE }}>Tools & tech</p>
+            <h2 className="text-5xl md:text-6xl font-black mb-10" style={{ color: CHARCOAL }}>What I build with</h2>
+          </div>
           <div className="flex flex-wrap gap-3">
             {TOOLS.map((tool) => (
               <ToolPill key={tool.label} tool={tool} />
@@ -96,7 +114,7 @@ export default function TechStack() {
 
   return (
     <section className="relative z-40 py-24 overflow-hidden" style={{ backgroundColor: ICE_SILVER }}>
-      <div className="max-w-7xl mx-auto px-4 md:px-12 mb-12">
+      <div ref={headingRef} className="max-w-7xl mx-auto px-4 md:px-12 mb-12">
         <p className="text-sm font-bold uppercase tracking-[0.25em] mb-4" style={{ color: SLATE }}>Tools & tech</p>
         <h2 className="text-5xl md:text-6xl font-black" style={{ color: CHARCOAL }}>What I build with</h2>
       </div>

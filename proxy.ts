@@ -46,7 +46,7 @@ export function proxy(request: NextRequest) {
     style-src 'self' 'unsafe-inline';
     img-src 'self' data: blob: https://picsum.photos;
     font-src 'self' data:;
-    connect-src 'self' https://formspree.io${isDev ? ' ws://localhost:* http://localhost:*' : ''};
+    connect-src 'self' blob: https://formspree.io${isDev ? ' ws://localhost:* http://localhost:*' : ''};
     form-action 'self' https://formspree.io;
     frame-ancestors 'none';
     base-uri 'self';

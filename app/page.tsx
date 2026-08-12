@@ -14,6 +14,8 @@ export default function Portfolio() {
   const [faq, setFaq] = useState<number | null>(null);
   const [activeSection, setActiveSection] = useState(0);
   const heroRef = useRef<HTMLDivElement>(null);
+  const heroHeadingRef = useRef<HTMLHeadingElement>(null);
+  const headerRef = useRef<HTMLElement>(null);
   const heroStackRef = useRef<HTMLDivElement>(null);
   const workStackRef = useRef<HTMLDivElement>(null);
   const aboutStackRef = useRef<HTMLDivElement>(null);
@@ -48,9 +50,46 @@ export default function Portfolio() {
     // That's what was actually causing content to stay stuck invisible,
     // not just a stale initial calculation.
     const ctx = gsap.context(() => {
+      // Header is position:sticky right after the Intro's 1160vh wrapper, so
+      // it only ever visually arrives at the exact same moment Hero does -
+      // give it a small synced entrance instead of just popping in flat.
+      if (headerRef.current) {
+        gsap.from(headerRef.current, {
+          scrollTrigger: {trigger: heroMarkerRef.current, start: 'top 95%', once: true},
+          y: -20, opacity: 0, duration: 0.7, ease: 'power3.out',
+        });
+      }
+
+      // Hero's entrance animation used to fire with gsap.from() on plain
+      // component mount - which happens instantly on page load, while the
+      // user is still at the very start of the 1160vh Intro scroll. By the
+      // time anyone actually scrolled down far enough to see Hero, the
+      // animation had already finished minutes of real time earlier and
+      // everything just sat at its final state - a wasted, invisible
+      // animation. Gating it on heroMarkerRef crossing into view fixes
+      // that: it now plays right as the user actually arrives at Hero.
       if (heroRef.current) {
-        gsap.from(heroRef.current.querySelectorAll('h1, .sub, button'), {
+        gsap.from(heroRef.current.querySelectorAll('.sub, button'), {
+          scrollTrigger: {trigger: heroMarkerRef.current, start: 'top 80%', once: true},
           duration: 1.1, y: 36, opacity: 0, stagger: 0.15, ease: 'power4.out',
+        });
+      }
+
+      // Headline word-wipe: each word starts fully covered by a solid
+      // accent-colour block, which then slides off to reveal the text
+      // underneath - same trigger point as the fade-up above so the whole
+      // hero lands together. Slower and with more breathing room between
+      // words than a typical snappy version of this effect, on purpose.
+      if (heroHeadingRef.current) {
+        const blocks = heroHeadingRef.current.querySelectorAll('.hero-word-block');
+        gsap.set(blocks, {xPercent: 0});
+        gsap.to(blocks, {
+          scrollTrigger: {trigger: heroMarkerRef.current, start: 'top 80%', once: true},
+          xPercent: 112,
+          duration: 0.75,
+          stagger: 0.3,
+          delay: 0.2,
+          ease: 'power4.inOut',
         });
       }
 
@@ -125,16 +164,16 @@ export default function Portfolio() {
   }, []);
 
   const faqs = [
-    {q: 'What\u2019s your typical timeline?', a: 'Depends, but most landing pages or redesigns take from 2 days to 2 months.'},
-    {q: 'Do you work with existing design systems?', a: 'Yes, and I actually enjoy it. Remeber its your identity too.'},
-    {q: 'How much will it cost?', a: 'MMHM how much does a house cost? Dpens right? Same with da website.'},
+    {q: 'What\u2019s your typical timeline?', a: 'Depends on scope, but most landing pages or redesigns take two to three weeks from kickoff to launch.'},
+    {q: 'Do you work with existing design systems?', a: 'Yes, and I actually enjoy it. Working inside constraints is a different skill from greenfield work, and I like both.'},
+    {q: 'What if I don\u2019t have a Figma file yet?', a: 'That\u2019s fine. I can work from references, rough sketches, or just a conversation about what you\u2019re trying to solve.'},
   ];
 
   return (
     <div style={{backgroundColor: WHITE}}>
       <Intro />
 
-      <header className="sticky top-0 w-full z-50 border-b border-black/10 backdrop-blur" style={{backgroundColor: 'rgba(255,255,255,0.8)'}}>
+      <header ref={headerRef} className="sticky top-0 w-full z-50 border-b border-black/10 backdrop-blur" style={{backgroundColor: 'rgba(255,255,255,0.8)'}}>
         <div className="max-w-7xl mx-auto px-4 md:px-12 h-20 flex justify-between items-center">
           <h2 className="text-lg font-black tracking-tight" style={{color: CHARCOAL}}>ADAM SIDAT</h2>
           <nav className="hidden md:flex gap-12 text-sm font-medium" style={{color: CHARCOAL}}>
@@ -185,47 +224,84 @@ export default function Portfolio() {
           needs to finish its transition before Work fully covers this. */}
       <div ref={heroMarkerRef} />
       <div className="relative" style={{height: '200vh'}}>
-        <div ref={heroStackRef} className="sticky top-0 z-10 h-screen w-full overflow-hidden" style={{backgroundColor: WHITE}}>
+        <div ref={heroStackRef} className="sticky top-0 z-10 h-screen w-full overflow-hidden" style={{backgroundColor: SOFT_GRAY}}>
           <section ref={heroRef} className="relative h-full flex items-center px-4 md:px-12 overflow-hidden">
             {/* Soft neon glow fields - not centred, not symmetric, kept well behind the content */}
-            <div className="absolute -top-24 -left-24 w-[420px] h-[420px] rounded-full opacity-25 blur-[100px] pointer-events-none" style={{background: CYAN}} />
-            <div className="absolute top-1/3 -right-32 w-[480px] h-[480px] rounded-full opacity-20 blur-[110px] pointer-events-none" style={{background: ULTRAVIOLET}} />
-            <div className="absolute -bottom-32 left-1/4 w-[380px] h-[380px] rounded-full opacity-20 blur-[100px] pointer-events-none" style={{background: LIME}} />
+            <div className="absolute -top-24 -left-24 w-[420px] h-[420px] rounded-full opacity-20 blur-[100px] pointer-events-none" style={{background: CYAN}} />
+            <div className="absolute -bottom-32 left-1/4 w-[380px] h-[380px] rounded-full opacity-15 blur-[100px] pointer-events-none" style={{background: LIME}} />
 
-            <div className="relative max-w-7xl mx-auto w-full grid md:grid-cols-2 gap-12 md:gap-16 items-center">
-              <div>
-                <h1 className="text-6xl md:text-7xl lg:text-8xl font-black mb-8 leading-[1.05]" style={{color: CHARCOAL}}>
-                  Normal is{' '}
-                  <span className="relative inline-block">
-                    <span className="absolute inset-x-0 bottom-1 md:bottom-3 h-4 md:h-7 -z-10 rounded-sm" style={{backgroundColor: LIME, opacity: 0.5}} />
-                    Boring
-                  </span>
-                </h1>
-                <p className="sub text-xl md:text-2xl font-light mb-12 max-w-lg" style={{color: SLATE}}>
-                  I build fast, considered interfaces for people who'd rather ship something sharp than something safe.
-                </p>
-                <div className="flex gap-6 flex-wrap">
-                  <button className="px-10 py-4 font-bold hover:opacity-90 active:scale-[0.97] transition text-sm uppercase" style={{backgroundColor: CYAN, color: CHARCOAL}}>See My Work</button>
-                  <button className="px-10 py-4 border-2 font-bold active:scale-[0.97] transition text-sm uppercase" style={{borderColor: CHARCOAL, color: CHARCOAL}} onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = CHARCOAL; e.currentTarget.style.color = WHITE; }} onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = 'transparent'; e.currentTarget.style.color = CHARCOAL; }}>Let's Talk</button>
-                </div>
-              </div>
+            {/* Background layer - large, faded, sits behind everything. Just
+                atmosphere/depth, not meant to be read as a sharp photo -
+                that's what the foreground subject image is for.
+                TODO(Akhi): swap for a real wide shot at /public/hero-bg.jpg */}
+            <div className="absolute top-0 right-0 w-[55%] h-full pointer-events-none">
+              <img
+                src="https://picsum.photos/seed/adam-sidat-hero-backdrop/1200/1400"
+                alt=""
+                className="absolute inset-0 w-full h-full object-cover"
+                style={{filter: 'grayscale(1) contrast(1.05) brightness(1.05)', opacity: 0.4}}
+              />
+              {/* Fades the image into the grey backdrop toward the text side,
+                  so it reads as atmosphere instead of fighting headline legibility. */}
+              <div className="absolute inset-0" style={{background: `linear-gradient(90deg, ${SOFT_GRAY} 0%, transparent 45%)`}} />
+              <div className="absolute inset-0" style={{background: `linear-gradient(180deg, transparent 60%, ${SOFT_GRAY} 100%)`}} />
+            </div>
 
-              {/* TODO(Akhi): swap for a real portrait/workspace photo at
-                  /public/hero.jpg - keep the grayscale + accent-tint
-                  treatment below if you want it to match the rest of the
-                  site's palette, or drop the filter entirely for a plain
-                  full-colour photo once it's real. */}
-              <div className="relative rounded-2xl overflow-hidden border border-black/10 aspect-[4/5] max-h-[65vh] mx-auto w-full shadow-xl">
-                <img
-                  src="https://picsum.photos/seed/adam-sidat-hero-portrait/800/1000"
-                  alt=""
-                  className="absolute inset-0 w-full h-full object-cover"
-                  style={{filter: 'grayscale(1) contrast(1.1) brightness(0.95)'}}
-                />
-                <div className="absolute inset-0 mix-blend-color" style={{backgroundColor: ULTRAVIOLET, opacity: 0.16}} />
-                <div className="absolute inset-0 bg-gradient-to-t from-black/35 via-transparent to-transparent" />
-                <div className="absolute bottom-6 left-6 w-10 h-[3px]" style={{backgroundColor: CYAN}} />
+            <div className="relative max-w-7xl mx-auto w-full">
+              <h1
+                ref={heroHeadingRef}
+                className="text-7xl md:text-8xl lg:text-9xl font-black mb-8 leading-[1.02]"
+                style={{color: CHARCOAL}}
+              >
+                {['Normal', 'is', 'Dead'].map((word, i) => (
+                  <React.Fragment key={word}>
+                    <span className="hero-word relative inline-block overflow-hidden align-top">
+                      <span>{word}</span>
+                      <span
+                        className="hero-word-block absolute inset-0"
+                        style={{backgroundColor: ACCENTS[i % ACCENTS.length]}}
+                      />
+                    </span>
+                    {i < 2 && ' '}
+                  </React.Fragment>
+                ))}
+              </h1>
+              <p className="sub text-xl md:text-2xl font-light mb-12 max-w-lg" style={{color: SLATE}}>
+                I build fast, considered interfaces for people who'd rather ship something sharp than something safe.
+              </p>
+              <div className="flex gap-6 flex-wrap">
+                <button className="px-10 py-4 font-bold hover:opacity-90 active:scale-[0.97] transition text-sm uppercase" style={{backgroundColor: CYAN, color: CHARCOAL}}>See My Work</button>
+                <button className="px-10 py-4 border-2 font-bold active:scale-[0.97] transition text-sm uppercase" style={{borderColor: CHARCOAL, color: CHARCOAL}} onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = CHARCOAL; e.currentTarget.style.color = WHITE; }} onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = 'transparent'; e.currentTarget.style.color = CHARCOAL; }}>Let's Talk</button>
               </div>
+            </div>
+
+            {/* Foreground subject - deliberately ABOVE the headline in
+                z-index (z-30 vs the text's default stacking) and offset to
+                overlap the last word's lower-right corner. That overlap is
+                what sells the layered/3D look: background image behind the
+                text, this in front of it. Soft radial mask instead of a
+                hard rectangle so it reads as a dissolving edge rather than
+                an obviously-cropped photo - a real background-removed
+                cutout would sell this even harder once you have one.
+                TODO(Akhi): swap for a real cutout PNG at /public/hero-subject.png */}
+            <div
+              className="absolute z-30 pointer-events-none"
+              style={{
+                right: '6%',
+                bottom: '8%',
+                width: 'clamp(160px, 22vw, 300px)',
+                aspectRatio: '3 / 4',
+                maskImage: 'radial-gradient(ellipse 68% 68% at 50% 42%, black 55%, transparent 100%)',
+                WebkitMaskImage: 'radial-gradient(ellipse 68% 68% at 50% 42%, black 55%, transparent 100%)',
+              }}
+            >
+              <img
+                src="https://picsum.photos/seed/adam-sidat-hero-subject/600/800"
+                alt=""
+                className="absolute inset-0 w-full h-full object-cover"
+                style={{filter: 'grayscale(1) contrast(1.15) brightness(0.98)'}}
+              />
+              <div className="absolute inset-0 mix-blend-color" style={{backgroundColor: ULTRAVIOLET, opacity: 0.18}} />
             </div>
           </section>
         </div>
@@ -254,7 +330,7 @@ export default function Portfolio() {
                   I'm a frontend developer who cares more about how something feels than how it looks in a screenshot. Most of my time goes into details people won't consciously notice: the timing of a hover state, the weight of a heading, whether a form actually tells you what went wrong.
                 </p>
                 <p className="text-lg leading-relaxed font-light" style={{color: SLATE}}>
-                  Outside of code I'm usually lifting, running, or working through calisthenics. If I'm not at a screen, I'm probably moving. I am currently sitting an alimyah too, and I share my desk with a cat who has strong opinions about my keyboard.
+                  Outside of code I'm usually lifting, running, or working through calisthenics. If I'm not at a screen, I'm probably moving. I keep up an alimiya class most weeks too, and I share my desk with a cat who has strong opinions about my keyboard.
                 </p>
               </div>
               {/* TODO(Akhi): swap both seeds below for real photos at
