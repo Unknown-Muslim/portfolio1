@@ -36,6 +36,24 @@ export const metadata: Metadata = {
   description: 'Frontend developer portfolio — bold, minimal, built different.',
 };
 
+// CRITICAL - do not remove without also removing the nonce-based CSP in
+// proxy.ts. proxy.ts hands out a brand new random nonce on every single
+// request, and the CSP header always demands the browser only run scripts
+// carrying that exact nonce. Without this line, Next.js statically
+// prerenders this page ONCE at build time - with no live request in
+// flight, there's no nonce to embed into the HTML at all. Production then
+// serves that same static HTML (no nonce, or a stale one) to every
+// visitor, while proxy.ts is still attaching a fresh CSP header demanding
+// a nonce that doesn't match anything in the markup. Every script tag
+// fails that check and the browser silently refuses to run any of them -
+// hydration, GSAP, Three.js, all of it, dead on arrival. `next dev` never
+// hits this because dev never statically caches a page; every dev request
+// is rendered fresh, so the mismatch is invisible until a real production
+// build. Cost of this line: the page renders per-request on Vercel instead
+// of being served as a cached static file - a bit more compute, still
+// fast, and non-negotiable as long as the CSP works this way.
+export const dynamic = 'force-dynamic';
+
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en" className={`${cursive.variable} ${display.variable} ${body.variable}`}>
