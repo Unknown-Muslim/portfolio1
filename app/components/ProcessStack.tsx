@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import gsap from 'gsap';
 import { ScrollTrigger } from 'gsap/dist/ScrollTrigger';
 
@@ -29,10 +29,11 @@ export default function ProcessStack() {
   const wrapperRef = useRef<HTMLDivElement>(null);
   const headingWrapRef = useRef<HTMLDivElement>(null);
   const cardRefs = useRef<Array<HTMLDivElement | null>>([]);
+  const [reduceMotion, setReduceMotion] = useState(false);
 
   useEffect(() => {
     if (headingWrapRef.current) {
-      gsap.from(headingWrapRef.current.children, {
+      gsap.from(headingWrapRef.current.querySelectorAll('.reveal-child'), {
         scrollTrigger: { trigger: headingWrapRef.current, start: 'top 88%' },
         y: 28, opacity: 0, duration: 0.8, stagger: 0.12, ease: 'power4.out',
       });
@@ -40,15 +41,9 @@ export default function ProcessStack() {
   }, []);
 
   useEffect(() => {
-    const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-
-    if (reduceMotion) {
-      cardRefs.current.forEach((card) => {
-        if (card) gsap.set(card, { x: 0, y: 0, rotate: 0, scale: 1, opacity: 1 });
-      });
-      if (wrapperRef.current) wrapperRef.current.style.height = 'auto';
-      return;
-    }
+    const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    setReduceMotion(reduce);
+    if (reduce) return;
 
     const n = STEPS.length;
 
@@ -99,27 +94,64 @@ export default function ProcessStack() {
     };
   }, []);
 
+  if (reduceMotion) {
+    return (
+      <section style={{ backgroundColor: WHITE }} className="relative z-40 border-t border-black/10">
+        <div className="max-w-7xl mx-auto px-4 md:px-12 pt-32 pb-16">
+          <p className="text-sm font-bold uppercase tracking-[0.25em] mb-4" style={{ color: CYAN }}>How we'll work together</p>
+          <h2 className="text-6xl md:text-7xl font-black mb-16" style={{ color: CHARCOAL }}>Process</h2>
+          <div className="grid gap-8 max-w-md">
+            {STEPS.map((step, i) => (
+              <div key={step.num} className="rounded-2xl bg-white border border-black/10 overflow-hidden flex flex-col shadow-lg">
+                <div className="relative h-40 shrink-0">
+                  <img src={step.img} alt={step.title} className="absolute inset-0 w-full h-full object-cover" />
+                  <div className="absolute top-4 right-4 w-10 h-10 rounded-full flex items-center justify-center text-sm font-black" style={{ backgroundColor: ACCENTS[i], color: CHARCOAL }}>
+                    {step.num}
+                  </div>
+                </div>
+                <div className="p-8">
+                  <div className="w-10 h-[3px] mb-5" style={{ backgroundColor: ACCENTS[i] }} />
+                  <h3 className="text-3xl font-black mb-3" style={{ color: CHARCOAL }}>{step.title}</h3>
+                  <p className="font-light leading-relaxed" style={{ color: SLATE }}>{step.desc}</p>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+    );
+  }
+
   return (
     <section style={{ backgroundColor: WHITE }} className="relative z-40 border-t border-black/10">
-      <div ref={headingWrapRef} className="max-w-7xl mx-auto px-4 md:px-12 pt-32 pb-8">
-        <p className="text-sm font-bold uppercase tracking-[0.25em] mb-4" style={{ color: CYAN }}>How we'll work together</p>
-        <h2 className="text-6xl md:text-7xl font-black" style={{ color: CHARCOAL }}>Process</h2>
+      <div ref={headingWrapRef} className="max-w-7xl mx-auto px-4 md:px-12 pt-24 md:pt-32 pb-8 flex items-end gap-6 flex-wrap">
+        <div className="reveal-child">
+          <p className="text-sm font-bold uppercase tracking-[0.25em] mb-4" style={{ color: CYAN }}>How we'll work together</p>
+          <h2 className="text-5xl sm:text-6xl md:text-7xl font-black" style={{ color: CHARCOAL }}>Process</h2>
+        </div>
+        <span
+          className="reveal-child hidden md:inline-block text-2xl -rotate-2 select-none mb-2"
+          style={{ fontFamily: 'var(--font-cursive)', color: ULTRAVIOLET, opacity: 0.85 }}
+          aria-hidden="true"
+        >
+          one step at a time
+        </span>
       </div>
 
       <div ref={wrapperRef} className="relative" style={{ height: '540vh' }}>
         <div className="sticky top-0 h-screen w-full flex items-center justify-center overflow-hidden">
-          <div className="relative w-full max-w-md h-[500px] md:h-[540px]" style={{ perspective: '1400px' }}>
+          <div className="relative w-full max-w-md px-4 md:px-0 h-[580px] sm:h-[500px] md:h-[540px]" style={{ perspective: '1400px' }}>
             {STEPS.map((step, i) => (
               <div
                 key={step.num}
                 ref={(el) => { cardRefs.current[i] = el; }}
-                className="absolute inset-0 rounded-2xl bg-white border border-black/10 overflow-hidden flex flex-col"
+                className="absolute inset-4 md:inset-0 rounded-2xl bg-white border border-black/10 overflow-hidden flex flex-col"
                 style={{
                   boxShadow: '0 30px 60px -15px rgba(0,0,0,0.22), 0 10px 20px -8px rgba(0,0,0,0.1)',
                   willChange: 'transform, opacity',
                 }}
               >
-                <div className="relative h-36 md:h-40 shrink-0">
+                <div className="relative h-32 sm:h-36 md:h-40 shrink-0">
                   <img src={step.img} alt={step.title} className="absolute inset-0 w-full h-full object-cover" />
                   <div
                     className="absolute top-4 right-4 w-10 h-10 rounded-full flex items-center justify-center text-sm font-black"
@@ -128,10 +160,10 @@ export default function ProcessStack() {
                     {step.num}
                   </div>
                 </div>
-                <div className="p-8 flex-1 flex flex-col justify-center">
-                  <div className="w-10 h-[3px] mb-5" style={{ backgroundColor: ACCENTS[i] }} />
-                  <h3 className="text-3xl font-black mb-3" style={{ color: CHARCOAL }}>{step.title}</h3>
-                  <p className="font-light leading-relaxed" style={{ color: SLATE }}>{step.desc}</p>
+                <div className="p-6 sm:p-8 flex-1 flex flex-col justify-center min-h-0">
+                  <div className="w-10 h-[3px] mb-4 sm:mb-5" style={{ backgroundColor: ACCENTS[i] }} />
+                  <h3 className="text-2xl sm:text-3xl font-black mb-2 sm:mb-3" style={{ color: CHARCOAL }}>{step.title}</h3>
+                  <p className="font-light leading-relaxed text-sm sm:text-base" style={{ color: SLATE }}>{step.desc}</p>
                 </div>
               </div>
             ))}

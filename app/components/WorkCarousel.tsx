@@ -15,25 +15,31 @@ interface Project {
   tags: string[];
 }
 
-// TODO(Akhi): swap these picsum placeholders for real project screenshots
-// whenever you have them - just replace the `image` value with a path
-// under /public/projects/ (e.g. '/projects/checkout.jpg').
 const PROJECTS: Project[] = [
-  { id: 1, title: 'Checkout Redesign', desc: 'A slow, multi-step checkout rebuilt into one clean flow.', image: 'https://picsum.photos/seed/checkout-flow-app/900/700', tags: ['Next.js', 'Stripe'] },
-  { id: 2, title: 'Dashboard Overhaul', desc: 'Cluttered analytics tool, given real hierarchy.', image: 'https://picsum.photos/seed/analytics-dashboard-ui/900/700', tags: ['React', 'D3.js'] },
-  { id: 3, title: 'Booking Platform', desc: 'End-to-end build, from empty states to edge cases.', image: 'https://picsum.photos/seed/booking-platform-app/900/700', tags: ['TypeScript', 'Node.js'] },
-  { id: 4, title: 'Marketing Site', desc: 'Built to load fast and convert faster.', image: 'https://picsum.photos/seed/marketing-launch-site/900/700', tags: ['Astro', 'GSAP'] },
-  { id: 5, title: 'Community Platform', desc: 'Real-time discussion, fast even at scale.', image: 'https://picsum.photos/seed/community-forum-app/900/700', tags: ['Next.js', 'Supabase'] },
-  { id: 6, title: 'Recipe App', desc: 'Search that actually understands what you have left in the fridge.', image: 'https://picsum.photos/seed/recipe-app-kitchen/900/700', tags: ['React Native', 'GraphQL'] },
-  { id: 7, title: 'Fitness Tracker', desc: 'Logging fast enough to survive an actual workout.', image: 'https://picsum.photos/seed/fitness-tracker-app/900/700', tags: ['Next.js', 'Chart.js'] },
-  { id: 8, title: 'Portfolio Builder', desc: 'A drag-and-drop editor for other people\u2019s portfolios.', image: 'https://picsum.photos/seed/portfolio-builder-tool/900/700', tags: ['React', 'Framer Motion'] },
-  { id: 9, title: 'Event Platform', desc: 'Ticketing and check-in that holds up under a queue.', image: 'https://picsum.photos/seed/event-ticketing-app/900/700', tags: ['Next.js', 'Stripe'] },
-  { id: 10, title: 'Internal Tools Suite', desc: 'A handful of scrappy admin tools, unified into one system.', image: 'https://picsum.photos/seed/internal-admin-tools/900/700', tags: ['React', 'tRPC'] },
+  { id: 1, title: 'Sidat AI', desc: 'A personal AI assistant with a chat interface built for quick, no-nonsense answers.', image: '/projects/sidat-ai.webp', tags: ['Next.js', 'LLM API'] },
+  { id: 2, title: 'Chronos — Watch Concept', desc: 'A cinematic product page for a fictional watch house, built around a 3D hero.', image: '/projects/chronos.webp', tags: ['Three.js', 'GSAP'] },
+  { id: 3, title: 'Velvet Pong', desc: 'Classic Pong rebuilt with neon glow, particle trails, and a proper CPU opponent.', image: '/projects/velvet-pong.webp', tags: ['Canvas', 'JavaScript'] },
+  { id: 4, title: 'Porsche 911 Turbo — Archive', desc: 'An interactive 3D archive page for a 1975 930, built to feel like a museum piece.', image: '/projects/porsche-911-turbo.webp', tags: ['Three.js', 'React Three Fiber'] },
+  { id: 5, title: 'Nurul Quran', desc: 'A calm, daily companion app for Quran reading, recitation, and prayer times.', image: '/projects/nurul-quran.webp', tags: ['Next.js', 'Tailwind CSS'] },
+  { id: 6, title: 'Maks Tiles & Bathrooms', desc: 'A local business site for an independent tile specialist, built to convert calls.', image: '/projects/maks-tiles.webp', tags: ['Next.js', 'Tailwind CSS'] },
+  { id: 7, title: 'Arkive', desc: 'Premium menswear e-commerce with a build-your-own-outfit flow.', image: '/projects/arkive.webp', tags: ['Next.js', 'Stripe'] },
+  { id: 8, title: 'Areeba Architecture', desc: 'A portfolio site for a residential architecture studio, built around restraint.', image: '/projects/areeba-architecture.webp', tags: ['Next.js', 'GSAP'] },
+  { id: 9, title: 'MXRB — Flavour Drop', desc: 'A playful concept landing page for a fictional energy drink collaboration.', image: '/projects/mxrb-flavour-drop.webp', tags: ['Next.js', 'GSAP'] },
+  { id: 10, title: 'Monster × Red Bull — Drop Concept', desc: 'A second exploration of the same collab idea, darker and more athletic.', image: '/projects/monster-redbull-drop.webp', tags: ['Next.js', 'Framer Motion'] },
+  { id: 11, title: 'Desk AI Sphere', desc: 'A lightweight desktop companion — a wireframe sphere that reacts as it thinks.', image: '/projects/desk-ai-sphere.webp', tags: ['Electron', 'Three.js'] },
 ];
 
 export default function WorkCarousel() {
   const [modal, setModal] = useState<Project | null>(null);
-  const [reduceMotion, setReduceMotion] = useState(false);
+  // Covers BOTH prefers-reduced-motion AND mobile viewports. Horizontal
+  // scroll-jacking (pinning the section and driving translateX off vertical
+  // scroll) fights with momentum scrolling and the address-bar collapse/
+  // expand behaviour on mobile Safari specifically - it's a well-known
+  // source of jank on touch devices even when the desktop version is
+  // buttery smooth. Below the md breakpoint this renders a plain native
+  // horizontally-scrollable, swipeable row instead - standard mobile
+  // carousel UX, and just as usable.
+  const [useFallback, setUseFallback] = useState(true);
 
   const sectionRef = useRef<HTMLElement>(null);
   const pinWrapRef = useRef<HTMLDivElement>(null);
@@ -58,13 +64,13 @@ export default function WorkCarousel() {
   }, [modal]);
 
   useEffect(() => {
-    const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-    setReduceMotion(reduce);
-    // Reduced motion: skip the scroll-jack entirely, fall back to a plain
-    // native horizontally-scrollable row with snap points. Still fully
-    // usable, just not driven by page scroll.
-    if (reduce) return;
+    const prefersReduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    const isMobile = window.innerWidth < 768; // matches Tailwind's md breakpoint
+    setUseFallback(prefersReduced || isMobile);
+  }, []);
 
+  useEffect(() => {
+    if (useFallback) return;
     if (!pinWrapRef.current || !trackRef.current) return;
 
     const ctx = gsap.context(() => {
@@ -120,17 +126,17 @@ export default function WorkCarousel() {
     }, sectionRef);
 
     return () => ctx.revert();
-  }, []);
+  }, [useFallback]);
 
   return (
     <section ref={sectionRef} className="relative w-full">
-      {/* Reduced-motion fallback: no pin, just a native scroll-snap row. */}
-      {reduceMotion ? (
-        <div className="w-full px-4 md:px-12 py-24">
-          <h2 className="reveal text-6xl md:text-7xl font-black mb-10" style={{ color: CHARCOAL }}>Work</h2>
-          <div className="flex gap-6 overflow-x-auto snap-x snap-mandatory pb-4" style={{ scrollbarWidth: 'thin' }}>
+      {/* Mobile/reduced-motion fallback: no pin, just a native scroll-snap row. */}
+      {useFallback ? (
+        <div className="w-full px-4 md:px-12 py-16 md:py-24">
+          <h2 className="reveal text-5xl sm:text-6xl md:text-7xl font-black mb-8 md:mb-10" style={{ color: CHARCOAL }}>Work</h2>
+          <div className="flex gap-5 overflow-x-auto snap-x snap-mandatory pb-4 -mx-4 px-4" style={{ scrollbarWidth: 'thin' }}>
             {PROJECTS.map((p, i) => (
-              <ProjectCard key={p.id} p={p} i={i} onOpen={() => setModal(p)} className="snap-start shrink-0 w-[85vw] md:w-[520px]" />
+              <ProjectCard key={p.id} p={p} i={i} onOpen={() => setModal(p)} className="snap-start shrink-0 w-[86vw] sm:w-[420px] h-auto" />
             ))}
           </div>
         </div>
@@ -147,9 +153,9 @@ export default function WorkCarousel() {
               <p className="hidden md:block text-sm font-medium" style={{ color: SLATE }}>Scroll to explore</p>
             </div>
 
-            <div ref={trackRef} className="flex gap-8 px-4 md:px-12 will-change-transform" style={{ width: 'max-content' }}>
+            <div ref={trackRef} className="flex gap-8 px-4 md:px-12 items-stretch will-change-transform" style={{ width: 'max-content' }}>
               {PROJECTS.map((p, i) => (
-                <ProjectCard key={p.id} p={p} i={i} onOpen={() => setModal(p)} className="shrink-0 w-[78vw] md:w-[440px]" />
+                <ProjectCard key={p.id} p={p} i={i} onOpen={() => setModal(p)} className="shrink-0 w-[420px] h-[420px]" />
               ))}
             </div>
 
@@ -180,9 +186,9 @@ export default function WorkCarousel() {
             className="bg-white rounded-2xl max-w-3xl w-full max-h-[90vh] overflow-auto shadow-2xl"
             onClick={(e) => e.stopPropagation()}
           >
-            <img src={modal.image} alt={modal.title} className="w-full aspect-video object-cover" />
-            <div className="p-8 md:p-10">
-              <h2 className="text-4xl font-black mb-4" style={{ color: CHARCOAL }}>{modal.title}</h2>
+            <img src={modal.image} alt={modal.title} className="w-full aspect-video object-cover object-top" />
+            <div className="p-6 md:p-10">
+              <h2 className="text-3xl md:text-4xl font-black mb-4" style={{ color: CHARCOAL }}>{modal.title}</h2>
               <p className="text-lg font-light mb-8" style={{ color: SLATE }}>{modal.desc}</p>
               <div className="flex gap-4 flex-wrap">
                 {modal.tags.map((t, j) => (
@@ -199,10 +205,17 @@ export default function WorkCarousel() {
   );
 }
 
+// Image on top, caption below - deliberately not the old overlay-text-on-
+// photo treatment. That worked for arbitrary stock photography, but
+// overlaying our own title/description on top of an actual product
+// screenshot competes with the screenshot's own UI and text, and makes
+// both hard to read. A plain case-study card (image, then a solid caption
+// block) is the standard, and correct, pattern for showcasing real
+// interface work.
 function ProjectCard({ p, i, onOpen, className }: { p: Project; i: number; onOpen: () => void; className: string }) {
   return (
     <div
-      className={`relative rounded-2xl overflow-hidden border border-black/10 shadow-xl cursor-pointer ${className}`}
+      className={`relative rounded-2xl overflow-hidden border border-black/10 shadow-xl cursor-pointer bg-white flex flex-col ${className}`}
       role="button"
       tabIndex={0}
       aria-label={`View details for ${p.title}`}
@@ -213,27 +226,25 @@ function ProjectCard({ p, i, onOpen, className }: { p: Project; i: number; onOpe
           onOpen();
         }
       }}
-      style={{ backgroundColor: ICE_SILVER }}
     >
-      <div className="relative aspect-[4/5]">
-        <img src={p.image} alt={p.title} className="absolute inset-0 w-full h-full object-cover" loading="lazy" />
-        <div className="absolute inset-0 bg-gradient-to-t from-black/75 via-black/10 to-transparent" />
+      <div className="relative aspect-[16/10] shrink-0 overflow-hidden" style={{ backgroundColor: ICE_SILVER }}>
+        <img src={p.image} alt={p.title} className="absolute inset-0 w-full h-full object-cover object-top" loading="lazy" />
         <div
-          className="absolute top-5 left-5 w-10 h-10 rounded-full flex items-center justify-center text-sm font-bold"
+          className="absolute top-4 left-4 w-9 h-9 rounded-full flex items-center justify-center text-xs font-bold shadow-md"
           style={{ backgroundColor: ACCENTS[i % ACCENTS.length], color: CHARCOAL }}
         >
           {String(i + 1).padStart(2, '0')}
         </div>
-        <div className="absolute bottom-0 left-0 right-0 p-6">
-          <h3 className="text-2xl font-black text-white mb-2">{p.title}</h3>
-          <p className="text-white/85 font-light text-sm mb-3">{p.desc}</p>
-          <div className="flex gap-3 flex-wrap">
-            {p.tags.map((t, j) => (
-              <span key={j} className="text-xs font-medium text-white/90 border-b border-white/50 pb-0.5">
-                {t}
-              </span>
-            ))}
-          </div>
+      </div>
+      <div className="p-5 flex-1 flex flex-col min-h-0">
+        <h3 className="text-lg font-black mb-1.5 leading-tight" style={{ color: CHARCOAL }}>{p.title}</h3>
+        <p className="font-light text-sm mb-3 leading-snug" style={{ color: SLATE }}>{p.desc}</p>
+        <div className="flex gap-3 flex-wrap mt-auto">
+          {p.tags.map((t, j) => (
+            <span key={j} className="text-xs font-medium border-b" style={{ color: SLATE, borderColor: SLATE }}>
+              {t}
+            </span>
+          ))}
         </div>
       </div>
     </div>

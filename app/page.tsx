@@ -13,6 +13,7 @@ gsap.registerPlugin(ScrollTrigger);
 export default function Portfolio() {
   const [faq, setFaq] = useState<number | null>(null);
   const [activeSection, setActiveSection] = useState(0);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const heroRef = useRef<HTMLDivElement>(null);
   const heroHeadingRef = useRef<HTMLHeadingElement>(null);
   const headerRef = useRef<HTMLElement>(null);
@@ -174,20 +175,59 @@ export default function Portfolio() {
       <Intro />
 
       <header ref={headerRef} className="sticky top-0 w-full z-50 border-b border-black/10 backdrop-blur" style={{backgroundColor: 'rgba(255,255,255,0.8)'}}>
-        <div className="max-w-7xl mx-auto px-4 md:px-12 h-20 flex justify-between items-center">
-          <h2 className="text-lg font-black tracking-tight" style={{color: CHARCOAL}}>ADAM SIDAT</h2>
+        <div className="max-w-7xl mx-auto px-4 md:px-12 h-16 md:h-20 flex justify-between items-center">
+          <h2 className="text-base md:text-lg font-black tracking-tight" style={{color: CHARCOAL}}>ADAM SIDAT</h2>
           <nav className="hidden md:flex gap-12 text-sm font-medium" style={{color: CHARCOAL}}>
             <a href="#work" className="hover:opacity-60 transition-opacity">Work</a>
             <a href="#about" className="hover:opacity-60 transition-opacity">About</a>
             <a href="#contact" className="hover:opacity-60 transition-opacity">Contact</a>
+          </nav>
+
+          {/* Mobile menu toggle - the nav above is hidden below md with no
+              other way to reach Work/About/Contact, so this isn't optional
+              polish, it's the only way those links exist on a phone. */}
+          <button
+            className="md:hidden relative w-10 h-10 flex items-center justify-center active:scale-90 transition-transform"
+            onClick={() => setMobileMenuOpen((v) => !v)}
+            aria-label={mobileMenuOpen ? 'Close menu' : 'Open menu'}
+            aria-expanded={mobileMenuOpen}
+          >
+            <span className="relative w-6 h-4 block">
+              <span
+                className="absolute left-0 top-0 w-6 h-[2px] transition-all duration-300"
+                style={{backgroundColor: CHARCOAL, transform: mobileMenuOpen ? 'translateY(7px) rotate(45deg)' : 'none'}}
+              />
+              <span
+                className="absolute left-0 bottom-0 w-6 h-[2px] transition-all duration-300"
+                style={{backgroundColor: CHARCOAL, transform: mobileMenuOpen ? 'translateY(-7px) rotate(-45deg)' : 'none'}}
+              />
+            </span>
+          </button>
+        </div>
+
+        {/* Mobile dropdown panel */}
+        <div
+          className="md:hidden overflow-hidden transition-all duration-300 border-t"
+          style={{
+            maxHeight: mobileMenuOpen ? '220px' : '0px',
+            borderColor: mobileMenuOpen ? 'rgba(0,0,0,0.1)' : 'transparent',
+            backgroundColor: WHITE,
+          }}
+        >
+          <nav className="flex flex-col px-4 py-4 gap-1 text-base font-medium" style={{color: CHARCOAL}}>
+            <a href="#work" onClick={() => setMobileMenuOpen(false)} className="py-3 active:opacity-50 transition-opacity">Work</a>
+            <a href="#about" onClick={() => setMobileMenuOpen(false)} className="py-3 active:opacity-50 transition-opacity">About</a>
+            <a href="#contact" onClick={() => setMobileMenuOpen(false)} className="py-3 active:opacity-50 transition-opacity">Contact</a>
           </nav>
         </div>
       </header>
 
       {/* Progress tabs - one per stacked section, filling in as you scroll
           past it. Sits just under the header so it's always visible, above
-          every stacked section (z-45, below the header's z-50). */}
-      <div className="sticky top-20 z-[45] w-full pointer-events-none flex justify-center">
+          every stacked section (z-45, below the header's z-50). Desktop
+          only - four pills of uppercase text don't fit a phone width
+          cleanly, and it's a nice-to-have progress cue, not core nav. */}
+      <div className="hidden md:flex sticky top-20 z-[45] w-full pointer-events-none justify-center">
         <div className="flex gap-1.5 pointer-events-auto">
           {SECTION_LABELS.map((label, i) => {
             const covered = activeSection >= i;
@@ -223,18 +263,21 @@ export default function Portfolio() {
           extra 100vh here is exactly the room GSAP's recede tween (above)
           needs to finish its transition before Work fully covers this. */}
       <div ref={heroMarkerRef} />
-      <div className="relative" style={{height: '200vh'}}>
-        <div ref={heroStackRef} className="sticky top-0 z-10 h-screen w-full overflow-hidden" style={{backgroundColor: SOFT_GRAY}}>
-          <section ref={heroRef} className="relative h-full flex items-center px-4 md:px-12 overflow-hidden">
+      <div className="relative h-auto md:h-[200vh]">
+        <div ref={heroStackRef} className="md:sticky md:top-0 z-10 h-auto md:h-screen w-full overflow-visible md:overflow-hidden" style={{backgroundColor: SOFT_GRAY}}>
+          <section ref={heroRef} className="relative h-auto md:h-full flex items-center px-4 md:px-12 py-24 md:py-0 overflow-hidden">
             {/* Soft neon glow fields - not centred, not symmetric, kept well behind the content */}
             <div className="absolute -top-24 -left-24 w-[420px] h-[420px] rounded-full opacity-20 blur-[100px] pointer-events-none" style={{background: CYAN}} />
             <div className="absolute -bottom-32 left-1/4 w-[380px] h-[380px] rounded-full opacity-15 blur-[100px] pointer-events-none" style={{background: LIME}} />
 
             {/* Background layer - large, faded, sits behind everything. Just
                 atmosphere/depth, not meant to be read as a sharp photo -
-                that's what the foreground subject image is for.
+                that's what the foreground subject image is for. Desktop
+                only: on a phone the headline wraps to 2-3 lines and needs
+                the full width, so this would end up overlapping text
+                instead of sitting quietly behind it.
                 TODO(Akhi): swap for a real wide shot at /public/hero-bg.jpg */}
-            <div className="absolute top-0 right-0 w-[55%] h-full pointer-events-none">
+            <div className="hidden md:block absolute top-0 right-0 w-[55%] h-full pointer-events-none">
               <img
                 src="https://picsum.photos/seed/adam-sidat-hero-backdrop/1200/1400"
                 alt=""
@@ -250,7 +293,7 @@ export default function Portfolio() {
             <div className="relative max-w-7xl mx-auto w-full">
               <h1
                 ref={heroHeadingRef}
-                className="text-7xl md:text-8xl lg:text-9xl font-black mb-8 leading-[1.02]"
+                className="text-5xl sm:text-6xl md:text-8xl lg:text-9xl font-black mb-8 leading-[1.02]"
                 style={{color: CHARCOAL}}
               >
                 {['Normal', 'is', 'Dead'].map((word, i) => (
@@ -269,9 +312,19 @@ export default function Portfolio() {
               <p className="sub text-xl md:text-2xl font-light mb-12 max-w-lg" style={{color: SLATE}}>
                 I build fast, considered interfaces for people who'd rather ship something sharp than something safe.
               </p>
-              <div className="flex gap-6 flex-wrap">
+              <div className="flex gap-6 flex-wrap items-center">
                 <button className="px-10 py-4 font-bold hover:opacity-90 active:scale-[0.97] transition text-sm uppercase" style={{backgroundColor: CYAN, color: CHARCOAL}}>See My Work</button>
                 <button className="px-10 py-4 border-2 font-bold active:scale-[0.97] transition text-sm uppercase" style={{borderColor: CHARCOAL, color: CHARCOAL}} onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = CHARCOAL; e.currentTarget.style.color = WHITE; }} onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = 'transparent'; e.currentTarget.style.color = CHARCOAL; }}>Let's Talk</button>
+                {/* Small handwritten accent - one of a few scattered around
+                    the site. Restrained on purpose: one word, muted colour,
+                    a slight tilt, not a loud decoration. */}
+                <span
+                  className="hidden sm:inline-block text-2xl -rotate-3 select-none"
+                  style={{fontFamily: 'var(--font-cursive)', color: SLATE, opacity: 0.7}}
+                  aria-hidden="true"
+                >
+                  probably.
+                </span>
               </div>
             </div>
 
@@ -283,9 +336,10 @@ export default function Portfolio() {
                 hard rectangle so it reads as a dissolving edge rather than
                 an obviously-cropped photo - a real background-removed
                 cutout would sell this even harder once you have one.
+                Desktop only, same reasoning as the backdrop image above.
                 TODO(Akhi): swap for a real cutout PNG at /public/hero-subject.png */}
             <div
-              className="absolute z-30 pointer-events-none"
+              className="hidden md:block absolute z-30 pointer-events-none"
               style={{
                 right: '6%',
                 bottom: '8%',
@@ -318,20 +372,32 @@ export default function Portfolio() {
         <WorkCarousel />
       </div>
 
-      {/* ABOUT - same taller-wrapper fix as Hero. */}
+      {/* ABOUT - same taller-wrapper fix as Hero, but desktop-only. On
+          mobile, two paragraphs plus a 440px photo collage stacked in one
+          column genuinely don't fit inside a single phone viewport height -
+          forcing h-screen + overflow-hidden there was silently clipping
+          content off-screen. Mobile drops the pin/fixed-height and just
+          flows normally, same pattern as Work's mobile fallback. */}
       <div ref={aboutMarkerRef} />
-      <div className="relative" style={{height: '200vh'}}>
-        <div ref={aboutStackRef} className="sticky top-0 z-30 h-screen w-full overflow-hidden" style={{backgroundColor: SOFT_GRAY}}>
-          <section id="about" className="h-full flex items-center px-4 md:px-12 max-w-7xl mx-auto w-full">
-            <div className="reveal-group grid md:grid-cols-2 gap-16 items-center">
+      <div className="relative h-auto md:h-[200vh]">
+        <div ref={aboutStackRef} className="md:sticky md:top-0 z-30 h-auto md:h-screen w-full overflow-visible md:overflow-hidden" style={{backgroundColor: SOFT_GRAY}}>
+          <section id="about" className="h-auto md:h-full flex items-center px-4 md:px-12 py-20 md:py-0 max-w-7xl mx-auto w-full">
+            <div className="reveal-group grid md:grid-cols-2 gap-10 md:gap-16 items-center">
               <div>
-                <h2 className="text-6xl md:text-7xl font-black mb-12" style={{color: CHARCOAL}}>About</h2>
+                <h2 className="text-5xl sm:text-6xl md:text-7xl font-black mb-8 md:mb-12" style={{color: CHARCOAL}}>About</h2>
                 <p className="text-lg leading-relaxed mb-6 font-light" style={{color: SLATE}}>
                   I'm a frontend developer who cares more about how something feels than how it looks in a screenshot. Most of my time goes into details people won't consciously notice: the timing of a hover state, the weight of a heading, whether a form actually tells you what went wrong.
                 </p>
-                <p className="text-lg leading-relaxed font-light" style={{color: SLATE}}>
+                <p className="text-lg leading-relaxed font-light mb-6 md:mb-0" style={{color: SLATE}}>
                   Outside of code I'm usually lifting, running, or working through calisthenics. If I'm not at a screen, I'm probably moving. I keep up an alimiya class most weeks too, and I share my desk with a cat who has strong opinions about my keyboard.
                 </p>
+                <span
+                  className="hidden md:inline-block text-2xl rotate-2 select-none mt-4"
+                  style={{fontFamily: 'var(--font-cursive)', color: CYAN, opacity: 0.85}}
+                  aria-hidden="true"
+                >
+                  still learning
+                </span>
               </div>
               {/* TODO(Akhi): swap both seeds below for real photos at
                   /public/about-1.jpg and /public/about-2.jpg - a training/
@@ -339,7 +405,7 @@ export default function Portfolio() {
                   best. Same grayscale + accent-tint treatment as the Hero
                   photo, so the two sections feel like one consistent set
                   rather than two different styles. */}
-              <div className="relative h-[440px] md:h-[520px] w-full max-w-md mx-auto">
+              <div className="relative h-[340px] sm:h-[440px] md:h-[520px] w-full max-w-md mx-auto">
                 <div className="absolute top-0 right-0 w-[72%] h-[85%] rounded-2xl overflow-hidden border border-black/10 shadow-xl">
                   <img
                     src="https://picsum.photos/seed/adam-sidat-training-session/700/860"
@@ -385,8 +451,8 @@ export default function Portfolio() {
           it fell through to the body's dark base colour, rendering charcoal
           text on a near-black background underneath. That's part of what
           made the screenshot unreadable, not just the sticky bug above. */}
-      <section className="relative z-40 py-32 px-4 md:px-12 max-w-4xl mx-auto" style={{backgroundColor: WHITE}}>
-        <h2 className="reveal text-6xl md:text-7xl font-black mb-16" style={{color: CHARCOAL}}>FAQ</h2>
+      <section className="relative z-40 py-20 md:py-32 px-4 md:px-12 max-w-4xl mx-auto" style={{backgroundColor: WHITE}}>
+        <h2 className="reveal text-5xl sm:text-6xl md:text-7xl font-black mb-10 md:mb-16" style={{color: CHARCOAL}}>FAQ</h2>
         <div className="reveal-group space-y-6">
           {faqs.map((item, i) => (
             <div key={i} className="border-b border-black/10 pb-6 pl-5 border-l-4" style={{borderLeftColor: ACCENTS[i % ACCENTS.length]}}>
@@ -410,10 +476,19 @@ export default function Portfolio() {
         </div>
       </section>
 
-      <section id="contact" className="relative z-40 py-32 px-4 md:px-12" style={{backgroundColor: DARK}}>
+      <section id="contact" className="relative z-40 py-20 md:py-32 px-4 md:px-12" style={{backgroundColor: DARK}}>
         <div className="max-w-4xl mx-auto">
-          <h2 className="reveal text-6xl md:text-7xl font-black mb-12 text-center text-white">Let's Work Together</h2>
-          <p className="reveal text-center text-xl text-white/60 font-light mb-16">Have an idea? Let's make something bold.</p>
+          <div className="relative text-center mb-12">
+            <h2 className="reveal text-5xl sm:text-6xl md:text-7xl font-black text-white">Let's Work Together</h2>
+            <span
+              className="hidden md:inline-block absolute -right-4 -top-2 text-3xl rotate-6 select-none"
+              style={{fontFamily: 'var(--font-cursive)', color: LIME, opacity: 0.85}}
+              aria-hidden="true"
+            >
+              say hi
+            </span>
+          </div>
+          <p className="reveal text-center text-lg md:text-xl text-white/60 font-light mb-12 md:mb-16">Have an idea? Let's make something bold.</p>
           <form className="reveal-group space-y-8" action="https://formspree.io/f/YOUR_FORM_ID" method="POST">
             {/* Honeypot: invisible to real visitors, bots fill every field they
                 find. Formspree silently drops submissions where this isn't
