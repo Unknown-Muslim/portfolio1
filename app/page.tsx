@@ -166,8 +166,8 @@ export default function Portfolio() {
 
   const faqs = [
     {q: 'What\u2019s your typical timeline?', a: 'Depends on scope, but most landing pages or redesigns take two to three weeks from kickoff to launch.'},
-    {q: 'Do you work with existing design systems?', a: 'Yes, and I actually enjoy it. Working inside constraints is a different skill from greenfield work, and I like both.'},
-    {q: 'What if I don\u2019t have a Figma file yet?', a: 'That\u2019s fine. I can work from references, rough sketches, or just a conversation about what you\u2019re trying to solve.'},
+    {q: 'Do you work with existing design systems?', a: 'Yes, and its your identity. If you don\'t have one, we can build one together.'},
+    {q: 'How much does it cost?', a: 'How much does a house cost? Depends right? Same with a website'},
   ];
 
   return (
