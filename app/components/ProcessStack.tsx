@@ -46,51 +46,62 @@ export default function ProcessStack() {
     if (reduce) return;
 
     const n = STEPS.length;
+    let ctx: gsap.Context | undefined;
 
-    const update = (p: number) => {
-      const windows = STEPS.map((_, i) => {
-        const start = i * (1 / n) * 0.82;
-        const end = start + (1 / n) * 1.15;
-        return mapRange(p, start, end, 0, 1);
+    const raf = requestAnimationFrame(() => {
+      ctx = gsap.context(() => {
+        const update = (p: number) => {
+          const windows = STEPS.map((_, i) => {
+            const start = i * (1 / n) * 0.82;
+            const end = start + (1 / n) * 1.15;
+            return mapRange(p, start, end, 0, 1);
+          });
+
+          STEPS.forEach((_, i) => {
+            const entrance = windows[i];
+            let depth = 0;
+            for (let j = i + 1; j < n; j++) depth += windows[j];
+
+            const baseRotate = i % 2 === 0 ? -4 : 4;
+            const xEntrance = mapRange(entrance, 0, 1, 130, 0);
+            const xDepth = -depth * 30;
+            const yDepth = -depth * 12;
+            const scale = 1 - Math.min(depth, 3) * 0.055;
+            const rotate = baseRotate + depth * (i % 2 === 0 ? -2.5 : 2.5);
+            const opacity = mapRange(entrance, 0, 0.15, 0, 1) * (1 - Math.min(depth, 3) * 0.1);
+
+            const card = cardRefs.current[i];
+            if (!card) return;
+            gsap.set(card, { xPercent: xEntrance, x: xDepth, y: yDepth, rotate, scale, opacity });
+          });
+        };
+
+        update(0);
+
+        // 5.4 viewport-heights of scroll distance for the full 5-card
+        // sequence - same as the old wrapper's 540vh, just computed as a
+        // GSAP-managed pin distance instead of a manually pre-sized wrapper
+        // div, so there's no longer two separate measurements that can
+        // disagree with each other.
+        gsap.to({ p: 0 }, {
+          p: 1,
+          ease: 'none',
+          scrollTrigger: {
+            trigger: wrapperRef.current,
+            start: 'top top',
+            end: () => `+=${window.innerHeight * 5.4}`,
+            pin: true,
+            scrub: 0.4,
+            invalidateOnRefresh: true,
+            onUpdate: (self) => update(self.progress),
+          },
+        });
       });
-
-      STEPS.forEach((_, i) => {
-        const entrance = windows[i];
-        let depth = 0;
-        for (let j = i + 1; j < n; j++) depth += windows[j];
-
-        const baseRotate = i % 2 === 0 ? -4 : 4;
-        const xEntrance = mapRange(entrance, 0, 1, 130, 0);
-        const xDepth = -depth * 30;
-        const yDepth = -depth * 12;
-        const scale = 1 - Math.min(depth, 3) * 0.055;
-        const rotate = baseRotate + depth * (i % 2 === 0 ? -2.5 : 2.5);
-        const opacity = mapRange(entrance, 0, 0.15, 0, 1) * (1 - Math.min(depth, 3) * 0.1);
-
-        const card = cardRefs.current[i];
-        if (!card) return;
-        gsap.set(card, { xPercent: xEntrance, x: xDepth, y: yDepth, rotate, scale, opacity });
-      });
-    };
-
-    update(0);
-
-    const dummy = { p: 0 };
-    const tween = gsap.to(dummy, {
-      p: 1,
-      ease: 'none',
-      scrollTrigger: {
-        trigger: wrapperRef.current,
-        start: 'top top',
-        end: 'bottom bottom',
-        scrub: 0.4,
-        onUpdate: (self) => update(self.progress),
-      },
     });
 
     return () => {
-      tween.scrollTrigger?.kill();
-      tween.kill();
+      cancelAnimationFrame(raf);
+      ctx?.revert();
     };
   }, []);
 
@@ -138,36 +149,35 @@ export default function ProcessStack() {
         </span>
       </div>
 
-      <div ref={wrapperRef} className="relative" style={{ height: '540vh' }}>
-        <div className="sticky top-0 h-screen w-full flex items-center justify-center overflow-hidden">
-          <div className="relative w-full max-w-md px-4 md:px-0 h-[580px] sm:h-[500px] md:h-[540px]" style={{ perspective: '1400px' }}>
-            {STEPS.map((step, i) => (
-              <div
-                key={step.num}
-                ref={(el) => { cardRefs.current[i] = el; }}
-                className="absolute inset-4 md:inset-0 rounded-2xl bg-white border border-black/10 overflow-hidden flex flex-col"
-                style={{
-                  boxShadow: '0 30px 60px -15px rgba(0,0,0,0.22), 0 10px 20px -8px rgba(0,0,0,0.1)',
-                  willChange: 'transform, opacity',
-                }}
-              >
-                <div className="relative h-32 sm:h-36 md:h-40 shrink-0">
-                  <img src={step.img} alt={step.title} className="absolute inset-0 w-full h-full object-cover" />
-                  <div
-                    className="absolute top-4 right-4 w-10 h-10 rounded-full flex items-center justify-center text-sm font-black"
-                    style={{ backgroundColor: ACCENTS[i], color: CHARCOAL }}
-                  >
-                    {step.num}
-                  </div>
-                </div>
-                <div className="p-6 sm:p-8 flex-1 flex flex-col justify-center min-h-0">
-                  <div className="w-10 h-[3px] mb-4 sm:mb-5" style={{ backgroundColor: ACCENTS[i] }} />
-                  <h3 className="text-2xl sm:text-3xl font-black mb-2 sm:mb-3" style={{ color: CHARCOAL }}>{step.title}</h3>
-                  <p className="font-light leading-relaxed text-sm sm:text-base" style={{ color: SLATE }}>{step.desc}</p>
+      <div ref={wrapperRef} className="relative h-screen w-full flex items-center justify-center overflow-hidden">
+        <div className="relative w-full max-w-md px-4 md:px-0 h-[580px] sm:h-[500px] md:h-[540px]" style={{ perspective: '1400px' }}>
+          {STEPS.map((step, i) => (
+            <div
+              key={step.num}
+              ref={(el) => { cardRefs.current[i] = el; }}
+              className="absolute inset-4 md:inset-0 rounded-2xl bg-white border border-black/10 overflow-hidden flex flex-col"
+              style={{
+                boxShadow: '0 30px 60px -15px rgba(0,0,0,0.22), 0 10px 20px -8px rgba(0,0,0,0.1)',
+                willChange: 'transform, opacity',
+                opacity: 0,
+              }}
+            >
+              <div className="relative h-32 sm:h-36 md:h-40 shrink-0">
+                <img src={step.img} alt={step.title} className="absolute inset-0 w-full h-full object-cover" />
+                <div
+                  className="absolute top-4 right-4 w-10 h-10 rounded-full flex items-center justify-center text-sm font-black"
+                  style={{ backgroundColor: ACCENTS[i], color: CHARCOAL }}
+                >
+                  {step.num}
                 </div>
               </div>
-            ))}
-          </div>
+              <div className="p-6 sm:p-8 flex-1 flex flex-col justify-center min-h-0">
+                <div className="w-10 h-[3px] mb-4 sm:mb-5" style={{ backgroundColor: ACCENTS[i] }} />
+                <h3 className="text-2xl sm:text-3xl font-black mb-2 sm:mb-3" style={{ color: CHARCOAL }}>{step.title}</h3>
+                <p className="font-light leading-relaxed text-sm sm:text-base" style={{ color: SLATE }}>{step.desc}</p>
+              </div>
+            </div>
+          ))}
         </div>
       </div>
     </section>

@@ -155,19 +155,28 @@ export default function Portfolio() {
     });
 
     const raf = requestAnimationFrame(() => ScrollTrigger.refresh());
+    // Extra safety net: the rAF refresh above can fire before every child
+    // component's own ScrollTrigger/pin setup has settled on its true final
+    // measurement (Work's pin especially, since its scroll distance depends
+    // on track.scrollWidth). Anything positioned below an under-measured
+    // pin - Process, here - ends up with a stale trigger position that
+    // doesn't correct itself until the 'load' event much later (or never,
+    // on a slow connection). A short delayed refresh catches that gap.
+    const settleTimeout = setTimeout(() => ScrollTrigger.refresh(), 400);
     const onLoad = () => ScrollTrigger.refresh();
     window.addEventListener('load', onLoad);
     return () => {
       ctx.revert();
       cancelAnimationFrame(raf);
+      clearTimeout(settleTimeout);
       window.removeEventListener('load', onLoad);
     };
   }, []);
 
   const faqs = [
     {q: 'What\u2019s your typical timeline?', a: 'Depends on scope, but most landing pages or redesigns take two to three weeks from kickoff to launch.'},
-    {q: 'Do you work with existing design systems?', a: 'Yes, and its your identity. If you don\'t have one, we can build one together.'},
-    {q: 'How much does it cost?', a: 'How much does a house cost? Depends right? Same with a website'},
+    {q: 'Do you work with existing design systems?', a: 'Yes, and I actually enjoy it. Working inside constraints is a different skill from greenfield work, and I like both.'},
+    {q: 'How much will it cost?', a: 'How much does a house cost? Depends. Same with a website — it comes down to scope, so let\u2019s talk about what you actually need before I throw a number at you.'},
   ];
 
   return (

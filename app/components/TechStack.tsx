@@ -4,6 +4,7 @@ import React, { useEffect, useRef, useState } from 'react';
 import gsap from 'gsap';
 import { ScrollTrigger } from 'gsap/dist/ScrollTrigger';
 import {
+  siFigma,
   siBlender,
   siNextdotjs,
   siReact,
@@ -33,6 +34,7 @@ interface Tool {
 // those render as plain text pills instead. Real logo where one genuinely
 // exists, honest text where it doesn't.
 const TOOLS: Tool[] = [
+  { label: 'Figma', path: siFigma.path, hex: siFigma.hex },
   { label: 'VS Code' },
   { label: 'Next.js', path: siNextdotjs.path, hex: siNextdotjs.hex },
   { label: 'React', path: siReact.path, hex: siReact.hex },
