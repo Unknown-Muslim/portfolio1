@@ -4,7 +4,8 @@ import React, { useEffect, useRef, useState } from 'react';
 import gsap from 'gsap';
 import { ScrollTrigger } from 'gsap/dist/ScrollTrigger';
 
-import { CYAN, LIME, ULTRAVIOLET, CHARCOAL, SLATE, WHITE } from '../theme';
+import { ChatCircleText, PenNib, Code, Checks, RocketLaunch } from '@phosphor-icons/react';
+import { CYAN, LIME, ULTRAVIOLET, CHARCOAL, SLATE, WHITE, SOFT_GRAY } from '../theme';
 
 gsap.registerPlugin(ScrollTrigger);
 
@@ -17,12 +18,18 @@ const mapRange = (v: number, inMin: number, inMax: number, outMin = 0, outMax = 
 
 const ACCENTS = [CYAN, LIME, ULTRAVIOLET, CYAN, LIME];
 
+// Icons instead of stock photography - picsum's "seed" text doesn't
+// actually influence what photo comes back (it just deterministically
+// picks a random image), so the old img URLs were never really "relevant",
+// just plausible-sounding filenames on top of arbitrary photos. Icons are
+// both genuinely on-topic per step AND bundled at build time, so there's
+// zero risk of them failing to load over the network.
 const STEPS = [
-  { num: '01', title: 'Talk', desc: 'A real conversation about what you\u2019re actually trying to solve, who it\u2019s for, and what success looks like. No forms, no fluff.', img: 'https://picsum.photos/seed/process-talk-meeting/500/320' },
-  { num: '02', title: 'Mockups', desc: 'A few concrete directions to react to, not vague descriptions. You see real options before anything gets built.', img: 'https://picsum.photos/seed/process-mockup-design/500/320' },
-  { num: '03', title: 'Build & Tweak', desc: 'Development starts once a direction is locked in. You see progress as it happens, not just at the end.', img: 'https://picsum.photos/seed/process-code-build/500/320' },
-  { num: '04', title: 'Test', desc: 'Real devices, real browsers, real edge cases. If something breaks quietly, I\u2019d rather catch it than you.', img: 'https://picsum.photos/seed/process-testing-devices/500/320' },
-  { num: '05', title: 'Ship', desc: 'Deployed, documented, and handed over properly. I don\u2019t disappear the moment it goes live.', img: 'https://picsum.photos/seed/process-launch-ship/500/320' },
+  { num: '01', title: 'Talk', desc: 'A real conversation about what you\u2019re actually trying to solve, who it\u2019s for, and what success looks like. No forms, no fluff.', Icon: ChatCircleText },
+  { num: '02', title: 'Mockups', desc: 'A few concrete directions to react to, not vague descriptions. You see real options before anything gets built.', Icon: PenNib },
+  { num: '03', title: 'Build & Tweak', desc: 'Development starts once a direction is locked in. You see progress as it happens, not just at the end.', Icon: Code },
+  { num: '04', title: 'Test', desc: 'Real devices, real browsers, real edge cases. If something breaks quietly, I\u2019d rather catch it than you.', Icon: Checks },
+  { num: '05', title: 'Ship', desc: 'Deployed, documented, and handed over properly. I don\u2019t disappear the moment it goes live.', Icon: RocketLaunch },
 ];
 
 export default function ProcessStack() {
@@ -114,8 +121,8 @@ export default function ProcessStack() {
           <div className="grid gap-8 max-w-md">
             {STEPS.map((step, i) => (
               <div key={step.num} className="rounded-2xl bg-white border border-black/10 overflow-hidden flex flex-col shadow-lg">
-                <div className="relative h-40 shrink-0">
-                  <img src={step.img} alt={step.title} className="absolute inset-0 w-full h-full object-cover" />
+                <div className="relative h-40 shrink-0 flex items-center justify-center" style={{ backgroundColor: SOFT_GRAY }}>
+                  <step.Icon size={56} weight="light" color={ACCENTS[i]} />
                   <div className="absolute top-4 right-4 w-10 h-10 rounded-full flex items-center justify-center text-sm font-black" style={{ backgroundColor: ACCENTS[i], color: CHARCOAL }}>
                     {step.num}
                   </div>
@@ -162,8 +169,8 @@ export default function ProcessStack() {
                 opacity: 0,
               }}
             >
-              <div className="relative h-32 sm:h-36 md:h-40 shrink-0">
-                <img src={step.img} alt={step.title} className="absolute inset-0 w-full h-full object-cover" />
+              <div className="relative h-32 sm:h-36 md:h-40 shrink-0 flex items-center justify-center" style={{ backgroundColor: SOFT_GRAY }}>
+                <step.Icon size={56} weight="light" color={ACCENTS[i]} />
                 <div
                   className="absolute top-4 right-4 w-10 h-10 rounded-full flex items-center justify-center text-sm font-black"
                   style={{ backgroundColor: ACCENTS[i], color: CHARCOAL }}
