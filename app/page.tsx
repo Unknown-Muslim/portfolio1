@@ -176,7 +176,7 @@ export default function Portfolio() {
   const faqs = [
     {q: 'What\u2019s your typical timeline?', a: 'Depends on scope, but most landing pages or redesigns take two to three weeks from kickoff to launch.'},
     {q: 'Do you work with existing design systems?', a: 'Yes, and I actually enjoy it. Working inside constraints is a different skill from greenfield work, and I like both.'},
-    {q: 'How much will it cost?', a: 'How much does a house cost? Depends. Same with a website — it comes down to scope, so let\u2019s talk about what you actually need before I throw a number at you.'},
+    {q: 'How much will it cost?', a: 'How much does a house cost? Depends right ? Same with a website — it comes down to scope, so let\u2019s talk about what you actually need before I throw a number at you.'},
   ];
 
   return (
