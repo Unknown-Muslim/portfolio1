@@ -16,6 +16,7 @@ import {
   siN8n,
 } from 'simple-icons';
 import { CHARCOAL, SLATE, ICE_SILVER } from '../theme';
+import WordReveal from './WordReveal';
 
 gsap.registerPlugin(ScrollTrigger);
 
@@ -99,7 +100,7 @@ export default function TechStack() {
         <div className="max-w-7xl mx-auto">
           <div ref={headingRef}>
             <p className="text-sm font-bold uppercase tracking-[0.25em] mb-4" style={{ color: SLATE }}>Tools & tech</p>
-            <h2 className="text-5xl md:text-6xl font-black mb-10" style={{ color: CHARCOAL }}>What I build with</h2>
+            <WordReveal text="What I build with" className="text-5xl md:text-6xl font-black mb-10" style={{ color: CHARCOAL }} />
           </div>
           <div className="flex flex-wrap gap-3">
             {TOOLS.map((tool) => (
@@ -115,7 +116,7 @@ export default function TechStack() {
     <section className="relative z-40 py-24 overflow-hidden" style={{ backgroundColor: ICE_SILVER }}>
       <div ref={headingRef} className="max-w-7xl mx-auto px-4 md:px-12 mb-12">
         <p className="text-sm font-bold uppercase tracking-[0.25em] mb-4" style={{ color: SLATE }}>Tools & tech</p>
-        <h2 className="text-5xl md:text-6xl font-black" style={{ color: CHARCOAL }}>What I build with</h2>
+        <WordReveal text="What I build with" className="text-5xl md:text-6xl font-black" style={{ color: CHARCOAL }} />
       </div>
 
       {/* Edge fade so the marquee reads as continuous rather than cutting

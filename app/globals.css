@@ -45,3 +45,48 @@ h1, h2, h3, h4, h5, h6 {
   -webkit-text-stroke: 1px rgba(255, 255, 255, 0.15);
   letter-spacing: -0.02em;
 }
+
+/* ---------- Hero ambient glow drift ---------- */
+/* Slow, subtle, continuous - background atmosphere, never draws attention
+   on its own. Two different durations/directions so the blobs don't move
+   in lockstep. */
+@keyframes glow-drift-a {
+  0%, 100% { transform: translate(0, 0) scale(1); }
+  50% { transform: translate(30px, 20px) scale(1.08); }
+}
+@keyframes glow-drift-b {
+  0%, 100% { transform: translate(0, 0) scale(1); }
+  50% { transform: translate(-24px, -18px) scale(1.06); }
+}
+.glow-drift-a {
+  animation: glow-drift-a 14s ease-in-out infinite;
+}
+.glow-drift-b {
+  animation: glow-drift-b 17s ease-in-out infinite;
+}
+@media (prefers-reduced-motion: reduce) {
+  .glow-drift-a, .glow-drift-b {
+    animation: none;
+  }
+}
+
+/* ---------- Nav link underline ---------- */
+.nav-link-underline {
+  position: relative;
+}
+.nav-link-underline::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  bottom: -3px;
+  width: 100%;
+  height: 2px;
+  background: currentColor;
+  transform: scaleX(0);
+  transform-origin: right;
+  transition: transform 300ms cubic-bezier(0.23, 1, 0.32, 1);
+}
+.nav-link-underline:hover::after {
+  transform: scaleX(1);
+  transform-origin: left;
+}

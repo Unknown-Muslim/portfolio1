@@ -6,6 +6,7 @@ import Intro from './components/Intro';
 import ProcessStack from './components/ProcessStack';
 import WorkCarousel from './components/WorkCarousel';
 import TechStack from './components/TechStack';
+import WordReveal from './components/WordReveal';
 import { CYAN, LIME, ULTRAVIOLET, ACCENTS, CHARCOAL, SLATE, WHITE, ICE_SILVER, SOFT_GRAY, DARK } from './theme';
 
 gsap.registerPlugin(ScrollTrigger);
@@ -15,6 +16,8 @@ export default function Portfolio() {
   const [activeSection, setActiveSection] = useState(0);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const heroRef = useRef<HTMLDivElement>(null);
+  const heroBackdropRef = useRef<HTMLDivElement>(null);
+  const heroSubjectRef = useRef<HTMLDivElement>(null);
   const heroHeadingRef = useRef<HTMLHeadingElement>(null);
   const headerRef = useRef<HTMLElement>(null);
   const heroStackRef = useRef<HTMLDivElement>(null);
@@ -50,6 +53,7 @@ export default function Portfolio() {
     // were already sitting at opacity:0 from the first, uncleaned run.
     // That's what was actually causing content to stay stuck invisible,
     // not just a stale initial calculation.
+    let heroMouseMoveHandler: ((e: MouseEvent) => void) | null = null;
     const ctx = gsap.context(() => {
       // Header is position:sticky right after the Intro's 1160vh wrapper, so
       // it only ever visually arrives at the exact same moment Hero does -
@@ -59,6 +63,37 @@ export default function Portfolio() {
           scrollTrigger: {trigger: heroMarkerRef.current, start: 'top 95%', once: true},
           y: -20, opacity: 0, duration: 0.7, ease: 'power3.out',
         });
+      }
+
+      // Hero mouse-parallax - the two layered images (background + subject)
+      // drift slightly opposite the cursor at different rates, reinforcing
+      // the depth illusion the overlap already sets up. Desktop-only
+      // (touch has no persistent cursor position for this to track).
+      const canParallax =
+        window.matchMedia('(hover: hover) and (pointer: fine)').matches &&
+        !window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+      if (canParallax && heroRef.current) {
+        const moveBackdrop = heroBackdropRef.current
+          ? { x: gsap.quickTo(heroBackdropRef.current, 'x', {duration: 0.9, ease: 'power3.out'}), y: gsap.quickTo(heroBackdropRef.current, 'y', {duration: 0.9, ease: 'power3.out'})}
+          : null;
+        const moveSubject = heroSubjectRef.current
+          ? { x: gsap.quickTo(heroSubjectRef.current, 'x', {duration: 0.6, ease: 'power3.out'}), y: gsap.quickTo(heroSubjectRef.current, 'y', {duration: 0.6, ease: 'power3.out'})}
+          : null;
+
+        heroMouseMoveHandler = (e: MouseEvent) => {
+          if (!heroRef.current) return;
+          const rect = heroRef.current.getBoundingClientRect();
+          const px = (e.clientX - rect.left) / rect.width - 0.5;
+          const py = (e.clientY - rect.top) / rect.height - 0.5;
+          // Background drifts a little, subtly - it's atmosphere.
+          moveBackdrop?.x(px * 16);
+          moveBackdrop?.y(py * 12);
+          // Subject (the layer that overlaps the text) moves a bit more -
+          // the bigger of the two shifts is what actually sells the depth.
+          moveSubject?.x(px * -28);
+          moveSubject?.y(py * -20);
+        };
+        heroRef.current.addEventListener('mousemove', heroMouseMoveHandler);
       }
 
       // Hero's entrance animation used to fire with gsap.from() on plain
@@ -179,6 +214,7 @@ export default function Portfolio() {
       clearTimeout(resizeRefreshTimeout);
       ro.disconnect();
       window.removeEventListener('load', onLoad);
+      if (heroMouseMoveHandler) heroRef.current?.removeEventListener('mousemove', heroMouseMoveHandler);
     };
   }, []);
 
@@ -196,9 +232,9 @@ export default function Portfolio() {
         <div className="max-w-7xl mx-auto px-4 md:px-12 h-16 md:h-20 flex justify-between items-center">
           <h2 className="text-base md:text-lg font-black tracking-tight" style={{color: CHARCOAL}}>ADAM SIDAT</h2>
           <nav className="hidden md:flex gap-12 text-sm font-medium" style={{color: CHARCOAL}}>
-            <a href="#work" className="hover:opacity-60 transition-opacity">Work</a>
-            <a href="#about" className="hover:opacity-60 transition-opacity">About</a>
-            <a href="#contact" className="hover:opacity-60 transition-opacity">Contact</a>
+            <a href="#work" className="nav-link-underline hover:opacity-90 transition-opacity">Work</a>
+            <a href="#about" className="nav-link-underline hover:opacity-90 transition-opacity">About</a>
+            <a href="#contact" className="nav-link-underline hover:opacity-90 transition-opacity">Contact</a>
           </nav>
 
           {/* Mobile menu toggle - the nav above is hidden below md with no
@@ -284,9 +320,9 @@ export default function Portfolio() {
       <div className="relative h-auto md:h-[200vh]">
         <div ref={heroStackRef} className="md:sticky md:top-0 z-10 h-auto md:h-screen w-full overflow-visible md:overflow-hidden" style={{backgroundColor: SOFT_GRAY}}>
           <section ref={heroRef} className="relative h-auto md:h-full flex items-center px-4 md:px-12 py-24 md:py-0 overflow-hidden">
-            {/* Soft neon glow fields - not centred, not symmetric, kept well behind the content */}
-            <div className="absolute -top-24 -left-24 w-[420px] h-[420px] rounded-full opacity-20 blur-[100px] pointer-events-none" style={{background: CYAN}} />
-            <div className="absolute -bottom-32 left-1/4 w-[380px] h-[380px] rounded-full opacity-15 blur-[100px] pointer-events-none" style={{background: LIME}} />
+            {/* Soft neon glow fields - not centred, not symmetric, kept well behind the content. Slow ambient drift, never draws attention on its own. */}
+            <div className="glow-drift-a absolute -top-24 -left-24 w-[420px] h-[420px] rounded-full opacity-20 blur-[100px] pointer-events-none" style={{background: CYAN}} />
+            <div className="glow-drift-b absolute -bottom-32 left-1/4 w-[380px] h-[380px] rounded-full opacity-15 blur-[100px] pointer-events-none" style={{background: LIME}} />
 
             {/* Background layer - large, faded, sits behind everything. Just
                 atmosphere/depth, not meant to be read as a sharp photo -
@@ -295,7 +331,7 @@ export default function Portfolio() {
                 the full width, so this would end up overlapping text
                 instead of sitting quietly behind it.
                 TODO(Akhi): swap for a real wide shot at /public/hero-bg.jpg */}
-            <div className="hidden md:block absolute top-0 right-0 w-[55%] h-full pointer-events-none">
+            <div ref={heroBackdropRef} className="hidden md:block absolute top-0 right-0 w-[55%] h-full pointer-events-none">
               <img
                 src="https://picsum.photos/seed/adam-sidat-hero-backdrop/1200/1400"
                 alt=""
@@ -357,6 +393,7 @@ export default function Portfolio() {
                 Desktop only, same reasoning as the backdrop image above.
                 TODO(Akhi): swap for a real cutout PNG at /public/hero-subject.png */}
             <div
+              ref={heroSubjectRef}
               className="hidden md:block absolute z-30 pointer-events-none"
               style={{
                 right: '6%',
@@ -402,7 +439,7 @@ export default function Portfolio() {
           <section id="about" className="h-auto md:h-full flex items-center px-4 md:px-12 py-20 md:py-0 max-w-7xl mx-auto w-full">
             <div className="reveal-group grid md:grid-cols-2 gap-10 md:gap-16 items-center">
               <div>
-                <h2 className="text-5xl sm:text-6xl md:text-7xl font-black mb-8 md:mb-12" style={{color: CHARCOAL}}>About</h2>
+                <WordReveal text="About" className="text-5xl sm:text-6xl md:text-7xl font-black mb-8 md:mb-12" style={{color: CHARCOAL}} start="top 80%" />
                 <p className="text-lg leading-relaxed mb-6 font-light" style={{color: SLATE}}>
                   I'm a frontend developer who cares more about how something feels than how it looks in a screenshot. Most of my time goes into details people won't consciously notice: the timing of a hover state, the weight of a heading, whether a form actually tells you what went wrong. I also build AI automations, the kind that quietly handle the repetitive stuff in the background so you don't have to.
                 </p>
@@ -424,21 +461,21 @@ export default function Portfolio() {
                   photo, so the two sections feel like one consistent set
                   rather than two different styles. */}
               <div className="relative h-[340px] sm:h-[440px] md:h-[520px] w-full max-w-md mx-auto">
-                <div className="absolute top-0 right-0 w-[72%] h-[85%] rounded-2xl overflow-hidden border border-black/10 shadow-xl">
+                <div className="group absolute top-0 right-0 w-[72%] h-[85%] rounded-2xl overflow-hidden border border-black/10 shadow-xl transition-transform duration-500 hover:-translate-y-1">
                   <img
                     src="https://picsum.photos/seed/adam-sidat-training-session/700/860"
                     alt=""
-                    className="absolute inset-0 w-full h-full object-cover"
+                    className="absolute inset-0 w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
                     style={{filter: 'grayscale(1) contrast(1.1) brightness(0.95)'}}
                   />
                   <div className="absolute inset-0 mix-blend-color" style={{backgroundColor: CYAN, opacity: 0.14}} />
                 </div>
 
-                <div className="absolute bottom-0 left-0 w-[52%] h-[52%] rounded-2xl overflow-hidden border-4 shadow-xl z-10" style={{borderColor: SOFT_GRAY}}>
+                <div className="group absolute bottom-0 left-0 w-[52%] h-[52%] rounded-2xl overflow-hidden border-4 shadow-xl z-10 transition-transform duration-500 hover:-translate-y-1" style={{borderColor: SOFT_GRAY}}>
                   <img
                     src="https://picsum.photos/seed/adam-sidat-desk-workspace-cat/520/520"
                     alt=""
-                    className="absolute inset-0 w-full h-full object-cover"
+                    className="absolute inset-0 w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
                     style={{filter: 'grayscale(1) contrast(1.1) brightness(0.95)'}}
                   />
                   <div className="absolute inset-0 mix-blend-color" style={{backgroundColor: ULTRAVIOLET, opacity: 0.16}} />
@@ -470,13 +507,26 @@ export default function Portfolio() {
           text on a near-black background underneath. That's part of what
           made the screenshot unreadable, not just the sticky bug above. */}
       <section className="relative z-40 py-20 md:py-32 px-4 md:px-12 max-w-4xl mx-auto" style={{backgroundColor: WHITE}}>
-        <h2 className="reveal text-5xl sm:text-6xl md:text-7xl font-black mb-10 md:mb-16" style={{color: CHARCOAL}}>FAQ</h2>
+        <WordReveal text="FAQ" className="text-5xl sm:text-6xl md:text-7xl font-black mb-10 md:mb-16" style={{color: CHARCOAL}} />
         <div className="reveal-group space-y-6">
           {faqs.map((item, i) => (
-            <div key={i} className="border-b border-black/10 pb-6 pl-5 border-l-4" style={{borderLeftColor: ACCENTS[i % ACCENTS.length]}}>
-              <button onClick={() => setFaq(faq === i ? null : i)} aria-expanded={faq === i} className="w-full text-left flex justify-between items-center hover:opacity-60 active:scale-[0.99] transition">
-                <h3 className="text-lg font-bold" style={{color: CHARCOAL}}>{item.q}</h3>
-                <span className={`text-3xl font-black transition-transform duration-300 ${faq === i ? 'rotate-45' : ''}`} style={{color: CHARCOAL}}>+</span>
+            <div
+              key={i}
+              className="group border-b border-black/10 border-l-4 transition-colors duration-300"
+              style={{borderLeftColor: ACCENTS[i % ACCENTS.length], ['--accent' as string]: ACCENTS[i % ACCENTS.length]}}
+            >
+              <button
+                onClick={() => setFaq(faq === i ? null : i)}
+                aria-expanded={faq === i}
+                className="w-full text-left flex justify-between items-center gap-4 pl-5 pr-4 py-6 transition-all duration-300 active:scale-[0.99] group-hover:pl-8 group-hover:bg-[color:var(--accent)]/[0.06]"
+              >
+                <h3 className="text-lg font-bold transition-colors duration-300" style={{color: CHARCOAL}}>{item.q}</h3>
+                <span
+                  className={`text-3xl font-black shrink-0 transition-all duration-300 group-hover:text-[color:var(--accent)] ${faq === i ? 'rotate-45' : ''}`}
+                  style={{color: CHARCOAL}}
+                >
+                  +
+                </span>
               </button>
               <div
                 style={{
@@ -486,7 +536,7 @@ export default function Portfolio() {
                 }}
               >
                 <div className="overflow-hidden">
-                  <p className="font-light pt-6 pb-1" style={{color: SLATE}}>{item.a}</p>
+                  <p className="font-light pt-0 pb-6 pl-5 pr-4" style={{color: SLATE}}>{item.a}</p>
                 </div>
               </div>
             </div>
@@ -497,7 +547,7 @@ export default function Portfolio() {
       <section id="contact" className="relative z-40 py-20 md:py-32 px-4 md:px-12" style={{backgroundColor: DARK}}>
         <div className="max-w-4xl mx-auto">
           <div className="relative text-center mb-12">
-            <h2 className="reveal text-5xl sm:text-6xl md:text-7xl font-black text-white">Let's Work Together</h2>
+            <WordReveal text="Let's Work Together" className="text-5xl sm:text-6xl md:text-7xl font-black text-center" style={{color: WHITE}} />
             <span
               className="hidden md:inline-block absolute -right-4 -top-2 text-3xl rotate-6 select-none"
               style={{fontFamily: 'var(--font-cursive)', color: LIME, opacity: 0.85}}
@@ -507,7 +557,7 @@ export default function Portfolio() {
             </span>
           </div>
           <p className="reveal text-center text-lg md:text-xl text-white/60 font-light mb-12 md:mb-16">Have an idea? Let's make something bold.</p>
-          <form className="reveal-group space-y-8" action="https://formspree.io/f/mrpzrveb" method="POST">
+          <form className="reveal-group space-y-8" action="https://formspree.io/f/YOUR_FORM_ID" method="POST">
             {/* Honeypot: invisible to real visitors, bots fill every field they
                 find. Formspree silently drops submissions where this isn't
                 empty - https://help.formspree.io/hc/en-us/articles/360013580813 */}

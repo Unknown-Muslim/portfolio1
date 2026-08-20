@@ -4,6 +4,7 @@ import React, { useEffect, useRef, useState } from 'react';
 import gsap from 'gsap';
 import { ScrollTrigger } from 'gsap/dist/ScrollTrigger';
 import { CYAN, ULTRAVIOLET, ACCENTS, CHARCOAL, SLATE, ICE_SILVER } from '../theme';
+import WordReveal from './WordReveal';
 
 gsap.registerPlugin(ScrollTrigger);
 
@@ -133,7 +134,7 @@ export default function WorkCarousel() {
       {/* Mobile/reduced-motion fallback: no pin, just a native scroll-snap row. */}
       {useFallback ? (
         <div className="w-full px-4 md:px-12 py-16 md:py-24">
-          <h2 className="reveal text-5xl sm:text-6xl md:text-7xl font-black mb-8 md:mb-10" style={{ color: CHARCOAL }}>Work</h2>
+          <WordReveal text="Work" className="text-5xl sm:text-6xl md:text-7xl font-black mb-8 md:mb-10" style={{ color: CHARCOAL }} />
           <div className="flex gap-5 overflow-x-auto snap-x snap-mandatory pb-4 -mx-4 px-4" style={{ scrollbarWidth: 'thin' }}>
             {PROJECTS.map((p, i) => (
               <ProjectCard key={p.id} p={p} i={i} onOpen={() => setModal(p)} className="snap-start shrink-0 w-[86vw] sm:w-[420px] h-auto" />
@@ -149,7 +150,7 @@ export default function WorkCarousel() {
 
           <div className="relative z-10 h-full flex flex-col justify-center pt-16 pb-10">
             <div className="px-4 md:px-12 mb-10 flex items-end justify-between">
-              <h2 className="reveal text-6xl md:text-7xl font-black" style={{ color: CHARCOAL }}>Work</h2>
+              <WordReveal text="Work" className="text-6xl md:text-7xl font-black" style={{ color: CHARCOAL }} start="top 95%" />
               <p className="hidden md:block text-sm font-medium" style={{ color: SLATE }}>Scroll to explore</p>
             </div>
 
@@ -213,22 +214,58 @@ export default function WorkCarousel() {
 // block) is the standard, and correct, pattern for showcasing real
 // interface work.
 function ProjectCard({ p, i, onOpen, className }: { p: Project; i: number; onOpen: () => void; className: string }) {
+  const cardRef = useRef<HTMLDivElement>(null);
+  const quickRotateX = useRef<gsap.QuickToFunc | null>(null);
+  const quickRotateY = useRef<gsap.QuickToFunc | null>(null);
+  const quickLift = useRef<gsap.QuickToFunc | null>(null);
+  const canTilt = useRef(false);
+
+  useEffect(() => {
+    canTilt.current =
+      window.matchMedia('(hover: hover) and (pointer: fine)').matches &&
+      !window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    if (!cardRef.current || !canTilt.current) return;
+    quickRotateX.current = gsap.quickTo(cardRef.current, 'rotateX', { duration: 0.5, ease: 'power3.out' });
+    quickRotateY.current = gsap.quickTo(cardRef.current, 'rotateY', { duration: 0.5, ease: 'power3.out' });
+    quickLift.current = gsap.quickTo(cardRef.current, 'y', { duration: 0.5, ease: 'power3.out' });
+  }, []);
+
+  const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
+    if (!canTilt.current || !cardRef.current) return;
+    const rect = cardRef.current.getBoundingClientRect();
+    const px = (e.clientX - rect.left) / rect.width - 0.5;
+    const py = (e.clientY - rect.top) / rect.height - 0.5;
+    quickRotateY.current?.(px * 9);
+    quickRotateX.current?.(-py * 9);
+    quickLift.current?.(-6);
+  };
+  const handleMouseLeave = () => {
+    if (!canTilt.current) return;
+    quickRotateY.current?.(0);
+    quickRotateX.current?.(0);
+    quickLift.current?.(0);
+  };
+
   return (
     <div
-      className={`relative rounded-2xl overflow-hidden border border-black/10 shadow-xl cursor-pointer bg-white flex flex-col ${className}`}
+      ref={cardRef}
+      className={`relative rounded-2xl overflow-hidden border border-black/10 shadow-xl cursor-pointer bg-white flex flex-col group ${className}`}
       role="button"
       tabIndex={0}
       aria-label={`View details for ${p.title}`}
       onClick={onOpen}
+      onMouseMove={handleMouseMove}
+      onMouseLeave={handleMouseLeave}
       onKeyDown={(e) => {
         if (e.key === 'Enter' || e.key === ' ') {
           e.preventDefault();
           onOpen();
         }
       }}
+      style={{ transformStyle: 'preserve-3d', willChange: 'transform' }}
     >
       <div className="relative aspect-[16/10] shrink-0 overflow-hidden" style={{ backgroundColor: ICE_SILVER }}>
-        <img src={p.image} alt={p.title} className="absolute inset-0 w-full h-full object-cover object-top" loading="lazy" />
+        <img src={p.image} alt={p.title} className="absolute inset-0 w-full h-full object-cover object-top transition-transform duration-500 group-hover:scale-110" loading="lazy" />
         <div
           className="absolute top-4 left-4 w-9 h-9 rounded-full flex items-center justify-center text-xs font-bold shadow-md"
           style={{ backgroundColor: ACCENTS[i % ACCENTS.length], color: CHARCOAL }}
