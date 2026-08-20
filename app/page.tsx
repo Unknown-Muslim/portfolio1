@@ -331,8 +331,8 @@ export default function Portfolio() {
                 I build fast, considered interfaces for people who'd rather ship something sharp than something safe.
               </p>
               <div className="flex gap-6 flex-wrap items-center">
-                <button className="px-10 py-4 font-bold hover:opacity-90 active:scale-[0.97] transition text-sm uppercase" style={{backgroundColor: CYAN, color: CHARCOAL}}>See My Work</button>
-                <button className="px-10 py-4 border-2 font-bold active:scale-[0.97] transition text-sm uppercase" style={{borderColor: CHARCOAL, color: CHARCOAL}} onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = CHARCOAL; e.currentTarget.style.color = WHITE; }} onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = 'transparent'; e.currentTarget.style.color = CHARCOAL; }}>Let's Talk</button>
+                <a href="#work" className="px-10 py-4 font-bold hover:opacity-90 active:scale-[0.97] transition text-sm uppercase text-center" style={{backgroundColor: CYAN, color: CHARCOAL}}>See My Work</a>
+                <a href="#contact" className="px-10 py-4 border-2 font-bold active:scale-[0.97] transition text-sm uppercase text-center" style={{borderColor: CHARCOAL, color: CHARCOAL}} onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = CHARCOAL; e.currentTarget.style.color = WHITE; }} onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = 'transparent'; e.currentTarget.style.color = CHARCOAL; }}>Let's Talk</a>
                 {/* Small handwritten accent - one of a few scattered around
                     the site. Restrained on purpose: one word, muted colour,
                     a slight tilt, not a loud decoration. */}
@@ -404,7 +404,7 @@ export default function Portfolio() {
               <div>
                 <h2 className="text-5xl sm:text-6xl md:text-7xl font-black mb-8 md:mb-12" style={{color: CHARCOAL}}>About</h2>
                 <p className="text-lg leading-relaxed mb-6 font-light" style={{color: SLATE}}>
-                  I'm a frontend developer who cares more about how something feels than how it looks in a screenshot. Most of my time goes into details people won't consciously notice: the timing of a hover state, the weight of a heading, whether a form actually tells you what went wrong.
+                  I'm a frontend developer who cares more about how something feels than how it looks in a screenshot. Most of my time goes into details people won't consciously notice: the timing of a hover state, the weight of a heading, whether a form actually tells you what went wrong. I also build AI automations, the kind that quietly handle the repetitive stuff in the background so you don't have to.
                 </p>
                 <p className="text-lg leading-relaxed font-light mb-6 md:mb-0" style={{color: SLATE}}>
                   Outside of code I'm usually lifting, running, or working through calisthenics. If I'm not at a screen, I'm probably moving. I keep up an alimiya class most weeks too, and I share my desk with a cat who has strong opinions about my keyboard.
@@ -507,7 +507,7 @@ export default function Portfolio() {
             </span>
           </div>
           <p className="reveal text-center text-lg md:text-xl text-white/60 font-light mb-12 md:mb-16">Have an idea? Let's make something bold.</p>
-          <form className="reveal-group space-y-8" action="https://formspree.io/f/YOUR_FORM_ID" method="POST">
+          <form className="reveal-group space-y-8" action="https://formspree.io/f/mrpzrveb" method="POST">
             {/* Honeypot: invisible to real visitors, bots fill every field they
                 find. Formspree silently drops submissions where this isn't
                 empty - https://help.formspree.io/hc/en-us/articles/360013580813 */}
@@ -535,14 +535,8 @@ export default function Portfolio() {
           this previously had neither, so it silently inherited the body's
           dark bg with default charcoal text on top of it: invisible. */}
       <footer className="reveal relative z-40 border-t border-white/10 py-16 px-4 md:px-12" style={{backgroundColor: DARK}}>
-        <div className="max-w-7xl mx-auto flex justify-between items-center flex-wrap gap-8">
+        <div className="max-w-7xl mx-auto text-center">
           <p className="text-sm text-white/50 font-light">© 2026 Adam Sidat</p>
-          <div className="flex gap-12 text-sm font-medium text-white/80">
-            {/* TODO: swap these for your real profile URLs */}
-            <a href="#" className="hover:opacity-60 transition-opacity">Twitter</a>
-            <a href="#" className="hover:opacity-60 transition-opacity">LinkedIn</a>
-            <a href="#" className="hover:opacity-60 transition-opacity">GitHub</a>
-          </div>
         </div>
       </footer>
     </div>

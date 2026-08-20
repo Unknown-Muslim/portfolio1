@@ -4,7 +4,6 @@ import React, { useEffect, useRef, useState } from 'react';
 import gsap from 'gsap';
 import { ScrollTrigger } from 'gsap/dist/ScrollTrigger';
 import {
-  siFigma,
   siBlender,
   siNextdotjs,
   siReact,
@@ -26,15 +25,14 @@ interface Tool {
   hex?: string; // official brand colour, only used when we have a real logo
 }
 
-// A few of these (VS Code, Onshape, Spline, "Vibe Coding") aren't in the
-// simple-icons set - Onshape and Spline don't have an entry there at all,
-// and this version of the package doesn't ship VS Code's. Rather than
-// hand-drawing a logo that might be wrong, or faking a mark for something
-// that isn't even a brand ("vibe coding" is a way of working, not a tool),
-// those render as plain text pills instead. Real logo where one genuinely
-// exists, honest text where it doesn't.
+// A few of these (VS Code, Onshape, Spline, Pipedream, "Vibe Coding") aren't
+// in the simple-icons set - Onshape, Spline, and Pipedream don't have an
+// entry there at all, and this version of the package doesn't ship VS
+// Code's. Rather than hand-drawing a logo that might be wrong, or faking a
+// mark for something that isn't even a brand ("vibe coding" is a way of
+// working, not a tool), those render as plain text pills instead. Real
+// logo where one genuinely exists, honest text where it doesn't.
 const TOOLS: Tool[] = [
-  { label: 'Figma', path: siFigma.path, hex: siFigma.hex },
   { label: 'VS Code' },
   { label: 'Next.js', path: siNextdotjs.path, hex: siNextdotjs.hex },
   { label: 'React', path: siReact.path, hex: siReact.hex },
@@ -48,6 +46,7 @@ const TOOLS: Tool[] = [
   { label: 'Vercel', path: siVercel.path, hex: siVercel.hex },
   { label: 'GitHub', path: siGithub.path, hex: siGithub.hex },
   { label: 'n8n', path: siN8n.path, hex: siN8n.hex },
+  { label: 'Pipedream' },
   { label: 'Vibe Coding' },
 ];
 

@@ -141,7 +141,7 @@ export default function WorkCarousel() {
           </div>
         </div>
       ) : (
-        <div ref={pinWrapRef} className="relative h-screen w-full overflow-hidden">
+        <div ref={pinWrapRef} className="relative h-screen w-full overflow-hidden" style={{ backgroundColor: ICE_SILVER }}>
           {/* Slow drift layer - giant faint section label, behind everything */}
           <div ref={driftSlowRef} className="absolute top-10 left-0 whitespace-nowrap pointer-events-none select-none" style={{ willChange: 'transform' }}>
             <span className="text-[18vw] font-black leading-none" style={{ color: CHARCOAL, opacity: 0.05 }}>SELECTED WORK</span>
