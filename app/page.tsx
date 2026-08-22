@@ -15,6 +15,7 @@ export default function Portfolio() {
   const [faq, setFaq] = useState<number | null>(null);
   const [activeSection, setActiveSection] = useState(0);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [formStatus, setFormStatus] = useState<'idle' | 'sending' | 'success' | 'error'>('idle');
   const heroRef = useRef<HTMLDivElement>(null);
   const heroBackdropRef = useRef<HTMLDivElement>(null);
   const heroSubjectRef = useRef<HTMLDivElement>(null);
@@ -143,11 +144,13 @@ export default function Portfolio() {
         });
       });
 
-      // Sticky-stack: as each next section arrives, the current one recedes
+      // Sticky-stack: as the next section arrives, the current one recedes
       // slightly (scales down, dims) instead of just sitting flat underneath -
-      // the "pile on top of each other, 3D" part of the brief. Each pair
-      // uses the NEXT section as the trigger so the recede finishes exactly
-      // as the next section reaches the top of the viewport and covers it.
+      // the "pile on top of each other, 3D" part of the brief. Hero -> Work
+      // is the only pair left here: About used to recede into TechStack the
+      // same way, but that read as About going dim/disappearing rather than
+      // a clean handoff, so About now just scrolls away normally as its own
+      // separate, fully-visible section - no dimming.
       //
       // Work is deliberately NOT one of the "current" sides here. Work now
       // owns its own GSAP ScrollTrigger pin internally (the horizontal-pan
@@ -155,11 +158,9 @@ export default function Portfolio() {
       // a CSS `transform` (scale) to an ancestor of a position:fixed element
       // creates a new containing block for that fixed element, per spec -
       // it would hijack GSAP's own pin and make the horizontal scroll jump
-      // around. Hero -> Work and About -> Process don't have that problem
-      // since neither Hero nor About is itself pinned, only sticky.
+      // around.
       const stackPairs: [HTMLDivElement | null, HTMLDivElement | null][] = [
         [heroStackRef.current, workStackRef.current],
-        [aboutStackRef.current, techStackAnchorRef.current],
       ];
       stackPairs.forEach(([current, next]) => {
         if (!current || !next) return;
@@ -202,7 +203,7 @@ export default function Portfolio() {
     let resizeRefreshTimeout: ReturnType<typeof setTimeout>;
     const ro = new ResizeObserver(() => {
       clearTimeout(resizeRefreshTimeout);
-      resizeRefreshTimeout = setTimeout(() => ScrollTrigger.refresh(), 120);
+      resizeRefreshTimeout = setTimeout(() => ScrollTrigger.refresh(), 350);
     });
     ro.observe(document.body);
 
@@ -223,6 +224,32 @@ export default function Portfolio() {
     {q: 'Do you work with existing design systems?', a: 'Yes, and I actually enjoy it. Working inside constraints is a different skill from greenfield work, and I like both.'},
     {q: 'How much will it cost?', a: 'How much does a house cost? Depends. Same with a website — it comes down to scope, so let\u2019s talk about what you actually need before I throw a number at you.'},
   ];
+
+  // Async submit instead of a plain native form POST - the honeypot field
+  // and Formspree endpoint stay exactly the same, but this way the button
+  // can actually show sending/sent/error states instead of just navigating
+  // the whole page away to Formspree's own response.
+  const handleContactSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    const form = e.currentTarget;
+    const data = new FormData(form);
+    setFormStatus('sending');
+    try {
+      const res = await fetch(form.action, {
+        method: 'POST',
+        body: data,
+        headers: { Accept: 'application/json' },
+      });
+      if (res.ok) {
+        setFormStatus('success');
+        form.reset();
+      } else {
+        setFormStatus('error');
+      }
+    } catch {
+      setFormStatus('error');
+    }
+  };
 
   return (
     <div style={{backgroundColor: WHITE}}>
@@ -439,9 +466,9 @@ export default function Portfolio() {
           <section id="about" className="h-auto md:h-full flex items-center px-4 md:px-12 py-20 md:py-0 max-w-7xl mx-auto w-full">
             <div className="reveal-group grid md:grid-cols-2 gap-10 md:gap-16 items-center">
               <div>
-                <WordReveal text="About" className="text-5xl sm:text-6xl md:text-7xl font-black mb-8 md:mb-12" style={{color: CHARCOAL}} start="top 80%" />
+                <WordReveal text="About" className="text-5xl sm:text-6xl md:text-7xl font-black mb-8 md:mb-12" style={{color: CHARCOAL}} />
                 <p className="text-lg leading-relaxed mb-6 font-light" style={{color: SLATE}}>
-                  I'm a frontend developer who cares more about how something feels than how it looks in a screenshot. Most of my time goes into details people won't consciously notice: the timing of a hover state, the weight of a heading, whether a form actually tells you what went wrong. I also build AI automations, the kind that quietly handle the repetitive stuff in the background so you don't have to.
+                  I'm a 14-year-old frontend developer who cares more about how something feels than how it looks in a screenshot. Most of my time goes into details people won't consciously notice: the timing of a hover state, the weight of a heading, whether a form actually tells you what went wrong. I also build AI automations, the kind that quietly handle the repetitive stuff in the background so you don't have to.
                 </p>
                 <p className="text-lg leading-relaxed font-light mb-6 md:mb-0" style={{color: SLATE}}>
                   Outside of code I'm usually lifting, running, or working through calisthenics. If I'm not at a screen, I'm probably moving. I keep up an alimiya class most weeks too, and I share my desk with a cat who has strong opinions about my keyboard.
@@ -557,7 +584,7 @@ export default function Portfolio() {
             </span>
           </div>
           <p className="reveal text-center text-lg md:text-xl text-white/60 font-light mb-12 md:mb-16">Have an idea? Let's make something bold.</p>
-          <form className="reveal-group space-y-8" action="https://formspree.io/f/YOUR_FORM_ID" method="POST">
+          <form className="reveal-group space-y-8" action="https://formspree.io/f/YOUR_FORM_ID" method="POST" onSubmit={handleContactSubmit}>
             {/* Honeypot: invisible to real visitors, bots fill every field they
                 find. Formspree silently drops submissions where this isn't
                 empty - https://help.formspree.io/hc/en-us/articles/360013580813 */}
@@ -565,18 +592,35 @@ export default function Portfolio() {
             <div className="grid md:grid-cols-2 gap-8">
               <div>
                 <label className="block text-sm font-bold mb-3 uppercase text-white/70">Name</label>
-                <input type="text" name="name" placeholder="Your name" className="w-full border-b-2 border-white/20 py-3 focus:outline-none transition bg-transparent font-light text-lg text-white placeholder:text-white/30" onFocus={(e) => (e.currentTarget.style.borderBottomColor = CYAN)} onBlur={(e) => (e.currentTarget.style.borderBottomColor = '')} />
+                <input required type="text" name="name" placeholder="Your name" className="w-full border-b-2 border-white/20 py-3 focus:outline-none transition bg-transparent font-light text-lg text-white placeholder:text-white/30" onFocus={(e) => (e.currentTarget.style.borderBottomColor = CYAN)} onBlur={(e) => (e.currentTarget.style.borderBottomColor = '')} />
               </div>
               <div>
                 <label className="block text-sm font-bold mb-3 uppercase text-white/70">Email</label>
-                <input type="email" name="email" placeholder="your@email.com" className="w-full border-b-2 border-white/20 py-3 focus:outline-none transition bg-transparent font-light text-lg text-white placeholder:text-white/30" onFocus={(e) => (e.currentTarget.style.borderBottomColor = LIME)} onBlur={(e) => (e.currentTarget.style.borderBottomColor = '')} />
+                <input required type="email" name="email" placeholder="your@email.com" className="w-full border-b-2 border-white/20 py-3 focus:outline-none transition bg-transparent font-light text-lg text-white placeholder:text-white/30" onFocus={(e) => (e.currentTarget.style.borderBottomColor = LIME)} onBlur={(e) => (e.currentTarget.style.borderBottomColor = '')} />
               </div>
             </div>
             <div>
               <label className="block text-sm font-bold mb-3 uppercase text-white/70">Message</label>
-              <textarea name="message" placeholder="Tell me about your project..." rows={6} className="w-full border-b-2 border-white/20 py-3 focus:outline-none transition bg-transparent font-light text-lg text-white placeholder:text-white/30 resize-none" onFocus={(e) => (e.currentTarget.style.borderBottomColor = ULTRAVIOLET)} onBlur={(e) => (e.currentTarget.style.borderBottomColor = '')} />
+              <textarea required name="message" placeholder="Tell me about your project..." rows={6} className="w-full border-b-2 border-white/20 py-3 focus:outline-none transition bg-transparent font-light text-lg text-white placeholder:text-white/30 resize-none" onFocus={(e) => (e.currentTarget.style.borderBottomColor = ULTRAVIOLET)} onBlur={(e) => (e.currentTarget.style.borderBottomColor = '')} />
             </div>
-            <button type="submit" className="w-full px-10 py-4 font-bold hover:opacity-90 active:scale-[0.98] transition text-sm uppercase mt-8" style={{backgroundColor: CYAN, color: CHARCOAL}}>Send Message</button>
+            <button
+              type="submit"
+              disabled={formStatus === 'sending'}
+              className="w-full px-10 py-4 font-bold hover:opacity-90 active:scale-[0.98] transition text-sm uppercase mt-8 disabled:opacity-60 disabled:cursor-not-allowed"
+              style={{backgroundColor: CYAN, color: CHARCOAL}}
+            >
+              {formStatus === 'sending' ? 'Sending...' : formStatus === 'success' ? 'Sent \u2713' : 'Send Message'}
+            </button>
+            {formStatus === 'success' && (
+              <p className="text-center text-sm font-medium" style={{color: LIME}}>
+                Got it - I'll get back to you soon.
+              </p>
+            )}
+            {formStatus === 'error' && (
+              <p className="text-center text-sm font-medium text-red-400">
+                Something went wrong. Try again, or email me directly.
+              </p>
+            )}
           </form>
         </div>
       </section>

@@ -150,7 +150,7 @@ export default function WorkCarousel() {
 
           <div className="relative z-10 h-full flex flex-col justify-center pt-16 pb-10">
             <div className="px-4 md:px-12 mb-10 flex items-end justify-between">
-              <WordReveal text="Work" className="text-6xl md:text-7xl font-black" style={{ color: CHARCOAL }} start="top 95%" />
+              <WordReveal text="Work" className="text-6xl md:text-7xl font-black" style={{ color: CHARCOAL }} />
               <p className="hidden md:block text-sm font-medium" style={{ color: SLATE }}>Scroll to explore</p>
             </div>
 
