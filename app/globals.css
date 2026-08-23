@@ -2,6 +2,10 @@
 @tailwind components;
 @tailwind utilities;
 
+:root {
+  --process-pad: calc(100vh * 4.4);
+}
+
 * {
   margin: 0;
   padding: 0;

@@ -529,6 +529,14 @@ export default function Portfolio() {
         <ProcessStack />
       </div>
 
+      {/* Spacer to ensure ProcessStack pin duration completes naturally before
+          page continues. Without this, the scroll distance calculation for the
+          pinned ProcessStack can overlap with Contact section, causing jarring
+          layout shifts and the "blank page then back" effect. Height here is
+          computed from ProcessStack's pin: end calculation (window.innerHeight * 5.4)
+          minus the wrapper's initial viewport height, so total scroll distance = 5.4vh. */}
+      <div style={{height: 'var(--process-pad)', backgroundColor: WHITE}} className="relative z-40" />
+
       {/* Explicit white background - this section previously had none, so
           it fell through to the body's dark base colour, rendering charcoal
           text on a near-black background underneath. That's part of what
@@ -584,7 +592,7 @@ export default function Portfolio() {
             </span>
           </div>
           <p className="reveal text-center text-lg md:text-xl text-white/60 font-light mb-12 md:mb-16">Have an idea? Let's make something bold.</p>
-          <form className="reveal-group space-y-8" action="https://formspree.io/f/YOUR_FORM_ID" method="POST" onSubmit={handleContactSubmit}>
+          <form className="reveal-group space-y-8" action="https://formspree.io/f/xpwqpvvb" method="POST" onSubmit={handleContactSubmit}>
             {/* Honeypot: invisible to real visitors, bots fill every field they
                 find. Formspree silently drops submissions where this isn't
                 empty - https://help.formspree.io/hc/en-us/articles/360013580813 */}
