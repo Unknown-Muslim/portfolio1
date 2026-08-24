@@ -37,10 +37,11 @@ export default function Portfolio() {
   const heroMarkerRef = useRef<HTMLDivElement>(null);
   const workMarkerRef = useRef<HTMLDivElement>(null);
   const aboutMarkerRef = useRef<HTMLDivElement>(null);
+  const techstackMarkerRef = useRef<HTMLDivElement>(null);
   const processMarkerRef = useRef<HTMLDivElement>(null);
 
-  const SECTION_LABELS = ['Home', 'Work', 'About', 'Process'];
-  const SECTION_COLORS = [CYAN, LIME, ULTRAVIOLET, CYAN];
+  const SECTION_LABELS = ['Home', 'Work', 'About', 'Tools', 'Process'];
+  const SECTION_COLORS = [CYAN, LIME, ULTRAVIOLET, SOFT_GRAY, CYAN];
 
   useEffect(() => {
     // Everything below is scoped inside gsap.context() so its cleanup
@@ -177,7 +178,7 @@ export default function Portfolio() {
       // each section's own scroll position rather than continuously - this
       // is discrete step state (four possible values), not a per-frame
       // value, so plain React state here is the right call.
-      const sectionMarkers = [heroMarkerRef.current, workMarkerRef.current, aboutMarkerRef.current, processMarkerRef.current];
+      const sectionMarkers = [heroMarkerRef.current, workMarkerRef.current, aboutMarkerRef.current, techstackMarkerRef.current, processMarkerRef.current];
       sectionMarkers.forEach((el, i) => {
         if (!el) return;
         ScrollTrigger.create({
@@ -462,7 +463,7 @@ export default function Portfolio() {
           flows normally, same pattern as Work's mobile fallback. */}
       <div ref={aboutMarkerRef} />
       <div className="relative h-auto md:h-[200vh]">
-        <div ref={aboutStackRef} className="md:sticky md:top-0 z-30 h-auto md:h-screen w-full overflow-visible md:overflow-hidden" style={{backgroundColor: SOFT_GRAY}}>
+        <div ref={aboutStackRef} className="md:sticky md:top-0 z-50 h-auto md:h-screen w-full overflow-visible md:overflow-hidden" style={{backgroundColor: SOFT_GRAY}}>
           <section id="about" className="h-auto md:h-full flex items-center px-4 md:px-12 py-20 md:py-0 max-w-7xl mx-auto w-full">
             <div className="reveal-group grid md:grid-cols-2 gap-10 md:gap-16 items-center">
               <div>
@@ -520,11 +521,14 @@ export default function Portfolio() {
         </div>
       </div>
 
-      <div ref={processMarkerRef} />
+      {/* TechStack marker for nav tracking */}
+      <div ref={techstackMarkerRef} />
       <div ref={techStackAnchorRef}>
         <TechStack />
       </div>
 
+      {/* Process section marker for nav tracking */}
+      <div ref={processMarkerRef} />
       <div ref={processAnchorRef}>
         <ProcessStack />
       </div>

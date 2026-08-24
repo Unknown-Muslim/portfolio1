@@ -114,7 +114,7 @@ export default function ProcessStack() {
 
   if (reduceMotion) {
     return (
-      <section style={{ backgroundColor: WHITE }} className="relative z-40 border-t border-black/10">
+      <section style={{ backgroundColor: WHITE }} className="relative z-30 border-t border-black/10">
         <div className="max-w-7xl mx-auto px-4 md:px-12 pt-32 pb-16">
           <p className="text-sm font-bold uppercase tracking-[0.25em] mb-4" style={{ color: CYAN }}>How we'll work together</p>
           <h2 className="text-6xl md:text-7xl font-black mb-16" style={{ color: CHARCOAL }}>Process</h2>
@@ -141,7 +141,7 @@ export default function ProcessStack() {
   }
 
   return (
-    <section style={{ backgroundColor: WHITE }} className="relative z-40 border-t border-black/10">
+    <section style={{ backgroundColor: WHITE }} className="relative z-30 border-t border-black/10">
       <div ref={headingWrapRef} className="max-w-7xl mx-auto px-4 md:px-12 pt-24 md:pt-32 pb-8 flex items-end gap-6 flex-wrap">
         <div className="reveal-child">
           <p className="text-sm font-bold uppercase tracking-[0.25em] mb-4" style={{ color: CYAN }}>How we'll work together</p>
