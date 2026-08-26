@@ -83,6 +83,10 @@ export default function ProcessStack() {
           });
         };
 
+        // CRITICAL: Set initial state (progress 0, step 1) immediately
+        // BEFORE creating the ScrollTrigger. This prevents the cards from
+        // starting in an intermediate state (like step 4-5) if ScrollTrigger
+        // fires before this line executes.
         update(0);
 
         // 5.4 viewport-heights of scroll distance for the full 5-card
@@ -100,6 +104,7 @@ export default function ProcessStack() {
             pin: true,
             scrub: 0.4,
             invalidateOnRefresh: true,
+            // onUpdate fires with progress 0-1, which drives the card animations
             onUpdate: (self) => update(self.progress),
           },
         });

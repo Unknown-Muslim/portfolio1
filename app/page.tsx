@@ -7,6 +7,7 @@ import ProcessStack from './components/ProcessStack';
 import WorkCarousel from './components/WorkCarousel';
 import TechStack from './components/TechStack';
 import WordReveal from './components/WordReveal';
+import WaveGridBackground from './components/WaveGridBackground';
 import { CYAN, LIME, ULTRAVIOLET, ACCENTS, CHARCOAL, SLATE, WHITE, ICE_SILVER, SOFT_GRAY, DARK } from './theme';
 
 gsap.registerPlugin(ScrollTrigger);
@@ -17,7 +18,6 @@ export default function Portfolio() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [formStatus, setFormStatus] = useState<'idle' | 'sending' | 'success' | 'error'>('idle');
   const heroRef = useRef<HTMLDivElement>(null);
-  const heroBackdropRef = useRef<HTMLDivElement>(null);
   const heroSubjectRef = useRef<HTMLDivElement>(null);
   const heroHeadingRef = useRef<HTMLHeadingElement>(null);
   const headerRef = useRef<HTMLElement>(null);
@@ -75,9 +75,8 @@ export default function Portfolio() {
         window.matchMedia('(hover: hover) and (pointer: fine)').matches &&
         !window.matchMedia('(prefers-reduced-motion: reduce)').matches;
       if (canParallax && heroRef.current) {
-        const moveBackdrop = heroBackdropRef.current
-          ? { x: gsap.quickTo(heroBackdropRef.current, 'x', {duration: 0.9, ease: 'power3.out'}), y: gsap.quickTo(heroBackdropRef.current, 'y', {duration: 0.9, ease: 'power3.out'})}
-          : null;
+        // WaveGridBackground handles its own mouse interactivity, so we only
+        // need to parallax the foreground subject image now.
         const moveSubject = heroSubjectRef.current
           ? { x: gsap.quickTo(heroSubjectRef.current, 'x', {duration: 0.6, ease: 'power3.out'}), y: gsap.quickTo(heroSubjectRef.current, 'y', {duration: 0.6, ease: 'power3.out'})}
           : null;
@@ -87,11 +86,8 @@ export default function Portfolio() {
           const rect = heroRef.current.getBoundingClientRect();
           const px = (e.clientX - rect.left) / rect.width - 0.5;
           const py = (e.clientY - rect.top) / rect.height - 0.5;
-          // Background drifts a little, subtly - it's atmosphere.
-          moveBackdrop?.x(px * 16);
-          moveBackdrop?.y(py * 12);
-          // Subject (the layer that overlaps the text) moves a bit more -
-          // the bigger of the two shifts is what actually sells the depth.
+          // Subject (the layer that overlaps the text) moves in response to cursor.
+          // The wave grid handles its own cursor response separately.
           moveSubject?.x(px * -28);
           moveSubject?.y(py * -20);
         };
@@ -352,24 +348,27 @@ export default function Portfolio() {
             <div className="glow-drift-a absolute -top-24 -left-24 w-[420px] h-[420px] rounded-full opacity-20 blur-[100px] pointer-events-none" style={{background: CYAN}} />
             <div className="glow-drift-b absolute -bottom-32 left-1/4 w-[380px] h-[380px] rounded-full opacity-15 blur-[100px] pointer-events-none" style={{background: LIME}} />
 
-            {/* Background layer - large, faded, sits behind everything. Just
-                atmosphere/depth, not meant to be read as a sharp photo -
-                that's what the foreground subject image is for. Desktop
-                only: on a phone the headline wraps to 2-3 lines and needs
-                the full width, so this would end up overlapping text
-                instead of sitting quietly behind it.
-                TODO(Akhi): swap for a real wide shot at /public/hero-bg.jpg */}
-            <div ref={heroBackdropRef} className="hidden md:block absolute top-0 right-0 w-[55%] h-full pointer-events-none">
-              <img
-                src="https://picsum.photos/seed/adam-sidat-hero-backdrop/1200/1400"
-                alt=""
-                className="absolute inset-0 w-full h-full object-cover"
-                style={{filter: 'grayscale(1) contrast(1.05) brightness(1.05)', opacity: 0.4}}
+            {/* Wave Grid Background - interactive 3D wave grid that responds to cursor
+                Desktop only: provides atmospheric, interactive depth behind headline
+                Mobile: hidden to preserve performance and viewport space */}
+            <div className="hidden md:block absolute top-0 right-0 w-[55%] h-full pointer-events-auto">
+              <WaveGridBackground
+                gridSize={25}
+                colorBase={SOFT_GRAY}
+                colorHigh={CYAN}
+                waveAmplitude={0.3}
+                waveSpeed={5.0}
+                waveFrequency={1.0}
+                waveWidth={2.5}
+                waveMaxHeight={0.3}
+                waveJitter={0.15}
+                autoAnimate={true}
+                vignette={true}
+                className="absolute inset-0"
               />
-              {/* Fades the image into the grey backdrop toward the text side,
-                  so it reads as atmosphere instead of fighting headline legibility. */}
-              <div className="absolute inset-0" style={{background: `linear-gradient(90deg, ${SOFT_GRAY} 0%, transparent 45%)`}} />
-              <div className="absolute inset-0" style={{background: `linear-gradient(180deg, transparent 60%, ${SOFT_GRAY} 100%)`}} />
+              {/* Fade the wave grid into the grey backdrop toward the text side */}
+              <div className="absolute inset-0 pointer-events-none" style={{background: `linear-gradient(90deg, ${SOFT_GRAY} 0%, transparent 45%)`}} />
+              <div className="absolute inset-0 pointer-events-none" style={{background: `linear-gradient(180deg, transparent 60%, ${SOFT_GRAY} 100%)`}} />
             </div>
 
             <div className="relative max-w-7xl mx-auto w-full">
