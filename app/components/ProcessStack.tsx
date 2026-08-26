@@ -55,64 +55,64 @@ export default function ProcessStack() {
     const n = STEPS.length;
     let ctx: gsap.Context | undefined;
 
-    const raf = requestAnimationFrame(() => {
-      ctx = gsap.context(() => {
-        const update = (p: number) => {
-          const windows = STEPS.map((_, i) => {
-            const start = i * (1 / n) * 0.82;
-            const end = start + (1 / n) * 1.15;
-            return mapRange(p, start, end, 0, 1);
-          });
-
-          STEPS.forEach((_, i) => {
-            const entrance = windows[i];
-            let depth = 0;
-            for (let j = i + 1; j < n; j++) depth += windows[j];
-
-            const baseRotate = i % 2 === 0 ? -4 : 4;
-            const xEntrance = mapRange(entrance, 0, 1, 130, 0);
-            const xDepth = -depth * 30;
-            const yDepth = -depth * 12;
-            const scale = 1 - Math.min(depth, 3) * 0.055;
-            const rotate = baseRotate + depth * (i % 2 === 0 ? -2.5 : 2.5);
-            const opacity = mapRange(entrance, 0, 0.15, 0, 1) * (1 - Math.min(depth, 3) * 0.1);
-
-            const card = cardRefs.current[i];
-            if (!card) return;
-            gsap.set(card, { xPercent: xEntrance, x: xDepth, y: yDepth, rotate, scale, opacity });
-          });
-        };
-
-        // CRITICAL: Set initial state (progress 0, step 1) immediately
-        // BEFORE creating the ScrollTrigger. This prevents the cards from
-        // starting in an intermediate state (like step 4-5) if ScrollTrigger
-        // fires before this line executes.
-        update(0);
-
-        // 5.4 viewport-heights of scroll distance for the full 5-card
-        // sequence - same as the old wrapper's 540vh, just computed as a
-        // GSAP-managed pin distance instead of a manually pre-sized wrapper
-        // div, so there's no longer two separate measurements that can
-        // disagree with each other.
-        gsap.to({ p: 0 }, {
-          p: 1,
-          ease: 'none',
-          scrollTrigger: {
-            trigger: wrapperRef.current,
-            start: 'top top',
-            end: () => `+=${window.innerHeight * 5.4}`,
-            pin: true,
-            scrub: 0.4,
-            invalidateOnRefresh: true,
-            // onUpdate fires with progress 0-1, which drives the card animations
-            onUpdate: (self) => update(self.progress),
-          },
+    // CRITICAL FIX: Run setup synchronously, not deferred via requestAnimationFrame.
+    // If the user scrolls back to this section after leaving, ScrollTrigger will
+    // restore cached scroll position and fire immediately. If update(0) is deferred,
+    // ScrollTrigger's onUpdate will fire first with a non-zero progress value,
+    // leaving cards in an intermediate state.
+    //
+    // Solution: Set up everything synchronously so update(0) runs before any
+    // ScrollTrigger events can fire.
+    
+    ctx = gsap.context(() => {
+      const update = (p: number) => {
+        const windows = STEPS.map((_, i) => {
+          const start = i * (1 / n) * 0.82;
+          const end = start + (1 / n) * 1.15;
+          return mapRange(p, start, end, 0, 1);
         });
+
+        STEPS.forEach((_, i) => {
+          const entrance = windows[i];
+          let depth = 0;
+          for (let j = i + 1; j < n; j++) depth += windows[j];
+
+          const baseRotate = i % 2 === 0 ? -4 : 4;
+          const xEntrance = mapRange(entrance, 0, 1, 130, 0);
+          const xDepth = -depth * 30;
+          const yDepth = -depth * 12;
+          const scale = 1 - Math.min(depth, 3) * 0.055;
+          const rotate = baseRotate + depth * (i % 2 === 0 ? -2.5 : 2.5);
+          const opacity = mapRange(entrance, 0, 0.15, 0, 1) * (1 - Math.min(depth, 3) * 0.1);
+
+          const card = cardRefs.current[i];
+          if (!card) return;
+          gsap.set(card, { xPercent: xEntrance, x: xDepth, y: yDepth, rotate, scale, opacity });
+        });
+      };
+
+      // Initialize to progress 0 (step 1) immediately, synchronously.
+      // This MUST happen before ScrollTrigger fires.
+      update(0);
+
+      // Now create the ScrollTrigger. When it fires, update() will be called
+      // with the correct progress value, and cards will animate from the correct state.
+      gsap.to({ p: 0 }, {
+        p: 1,
+        ease: 'none',
+        scrollTrigger: {
+          trigger: wrapperRef.current,
+          start: 'top top',
+          end: () => `+=${window.innerHeight * 5.4}`,
+          pin: true,
+          scrub: 0.4,
+          invalidateOnRefresh: true,
+          onUpdate: (self) => update(self.progress),
+        },
       });
-    });
+    }, wrapperRef);
 
     return () => {
-      cancelAnimationFrame(raf);
       ctx?.revert();
     };
   }, []);
