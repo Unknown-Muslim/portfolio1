@@ -4,8 +4,17 @@ import React, { useEffect, useRef, useState } from 'react';
 import gsap from 'gsap';
 import { ScrollTrigger } from 'gsap/dist/ScrollTrigger';
 
-import { ChatCircleText, PenNib, Code, Checks, RocketLaunch } from '@phosphor-icons/react';
 import { CYAN, LIME, ULTRAVIOLET, CHARCOAL, SLATE, WHITE, SOFT_GRAY } from '../theme';
+
+// Icon placeholders
+const IconPlaceholder = ({ size, weight, color }: { size: number; weight: string; color: string }) => (
+  <div style={{ width: size, height: size, backgroundColor: color, borderRadius: '4px' }} />
+);
+const ChatCircleText = IconPlaceholder;
+const PenNib = IconPlaceholder;
+const Code = IconPlaceholder;
+const Checks = IconPlaceholder;
+const RocketLaunch = IconPlaceholder;
 
 gsap.registerPlugin(ScrollTrigger);
 
@@ -54,18 +63,23 @@ export default function ProcessStack() {
 
     const n = STEPS.length;
     let ctx: gsap.Context | undefined;
-
-    // CRITICAL FIX: Run setup synchronously, not deferred via requestAnimationFrame.
-    // If the user scrolls back to this section after leaving, ScrollTrigger will
-    // restore cached scroll position and fire immediately. If update(0) is deferred,
-    // ScrollTrigger's onUpdate will fire first with a non-zero progress value,
-    // leaving cards in an intermediate state.
-    //
-    // Solution: Set up everything synchronously so update(0) runs before any
-    // ScrollTrigger events can fire.
+    let scrollTriggerCreated = false;
+    let suppressFirstUpdate = true;
     
     ctx = gsap.context(() => {
       const update = (p: number) => {
+        // CRITICAL: Suppress the very first ScrollTrigger update that fires
+        // with the cached scroll position. This prevents cards from jumping
+        // to step 4-5 if the page is scrolled to ProcessStack on load.
+        if (suppressFirstUpdate && p > 0.1) {
+          suppressFirstUpdate = false;
+          // Force progress back to 0 for this frame
+          p = 0;
+        } else if (suppressFirstUpdate && p === 0) {
+          // This is the desired initial state
+          suppressFirstUpdate = false;
+        }
+
         const windows = STEPS.map((_, i) => {
           const start = i * (1 / n) * 0.82;
           const end = start + (1 / n) * 1.15;
@@ -91,12 +105,12 @@ export default function ProcessStack() {
         });
       };
 
-      // Initialize to progress 0 (step 1) immediately, synchronously.
-      // This MUST happen before ScrollTrigger fires.
+      // Initialize to progress 0 (step 1) immediately.
       update(0);
 
-      // Now create the ScrollTrigger. When it fires, update() will be called
-      // with the correct progress value, and cards will animate from the correct state.
+      // Create the ScrollTrigger that will drive the card stack animation.
+      // The suppressFirstUpdate flag prevents ScrollTrigger's initial fire
+      // (which has cached scroll position) from jumping to step 4-5.
       gsap.to({ p: 0 }, {
         p: 1,
         ease: 'none',
@@ -107,7 +121,10 @@ export default function ProcessStack() {
           pin: true,
           scrub: 0.4,
           invalidateOnRefresh: true,
-          onUpdate: (self) => update(self.progress),
+          onUpdate: (self) => {
+            scrollTriggerCreated = true;
+            update(self.progress);
+          },
         },
       });
     }, wrapperRef);
