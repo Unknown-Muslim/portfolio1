@@ -121,9 +121,19 @@ export default function ProcessStack() {
           pin: true,
           scrub: 0.4,
           invalidateOnRefresh: true,
+          onEnter: () => fetch('http://127.0.0.1:7558/ingest/b3a62563-5fc4-4448-b721-48f867c62de8',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'9d6971'},body:JSON.stringify({sessionId:'9d6971',runId:'pre-fix',hypothesisId:'H4',location:'ProcessStack.tsx:pin',message:'process pin entered',data:{scrollY:window.scrollY,pinDist:window.innerHeight*5.4},timestamp:Date.now()})}).catch(()=>{}),
+          onLeave: () => fetch('http://127.0.0.1:7558/ingest/b3a62563-5fc4-4448-b721-48f867c62de8',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'9d6971'},body:JSON.stringify({sessionId:'9d6971',runId:'pre-fix',hypothesisId:'H2',location:'ProcessStack.tsx:pin',message:'process pin left (end)',data:{scrollY:window.scrollY},timestamp:Date.now()})}).catch(()=>{}),
+          onLeaveBack: () => fetch('http://127.0.0.1:7558/ingest/b3a62563-5fc4-4448-b721-48f867c62de8',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'9d6971'},body:JSON.stringify({sessionId:'9d6971',runId:'pre-fix',hypothesisId:'H3',location:'ProcessStack.tsx:pin',message:'process pin left BACK (jumped above pin)',data:{scrollY:window.scrollY},timestamp:Date.now()})}).catch(()=>{}),
           onUpdate: (self) => {
             scrollTriggerCreated = true;
             update(self.progress);
+            const bucket = Math.floor(self.progress * 4);
+            const card0 = cardRefs.current[0];
+            const card4 = cardRefs.current[4];
+            if (self.progress > 0.95 || self.progress < 0.05 || (self as {__dbgBucket?: number}).__dbgBucket !== bucket) {
+              (self as {__dbgBucket?: number}).__dbgBucket = bucket;
+              fetch('http://127.0.0.1:7558/ingest/b3a62563-5fc4-4448-b721-48f867c62de8',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'9d6971'},body:JSON.stringify({sessionId:'9d6971',runId:'pre-fix',hypothesisId:'H4',location:'ProcessStack.tsx:pin',message:'process pin progress',data:{progress:self.progress,scrollY:window.scrollY,card0Opacity:card0?getComputedStyle(card0).opacity:'n/a',card4Opacity:card4?getComputedStyle(card4).opacity:'n/a',isActive:self.isActive,pinState:self.pin?true:false},timestamp:Date.now()})}).catch(()=>{});
+            }
           },
         },
       });
