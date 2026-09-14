@@ -167,7 +167,7 @@ function MatrixRain({ progressRef }: { progressRef: React.MutableRefObject<numbe
     };
   }, [progressRef]);
 
-  return <canvas ref={canvasRef} className="absolute inset-0 z-10" />;
+  return <canvas ref={canvasRef} className="absolute inset-0 z-10 pointer-events-none" />;
 }
 
 /* ============================================================================
@@ -514,6 +514,7 @@ function BookScene({ progressRef }: { progressRef: React.MutableRefObject<number
 
   return (
     <Canvas
+      className="pointer-events-none"
       shadows="soft"
       dpr={[1, 2]}
       gl={{ antialias: true, alpha: true }}

@@ -93,14 +93,9 @@ export default function WorkCarousel() {
           pin: true,
           scrub: 1,
           invalidateOnRefresh: true,
-          onEnter: () => fetch('http://127.0.0.1:7558/ingest/b3a62563-5fc4-4448-b721-48f867c62de8',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'9d6971'},body:JSON.stringify({sessionId:'9d6971',runId:'pre-fix',hypothesisId:'H1',location:'WorkCarousel.tsx:pin',message:'work pin entered',data:{scrollY:window.scrollY,distance:getDistance()},timestamp:Date.now()})}).catch(()=>{}),
-          onLeave: () => fetch('http://127.0.0.1:7558/ingest/b3a62563-5fc4-4448-b721-48f867c62de8',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'9d6971'},body:JSON.stringify({sessionId:'9d6971',runId:'pre-fix',hypothesisId:'H1',location:'WorkCarousel.tsx:pin',message:'work pin left',data:{scrollY:window.scrollY},timestamp:Date.now()})}).catch(()=>{}),
           onUpdate: (self) => {
             if (progressBarRef.current) {
               gsap.set(progressBarRef.current, { scaleX: self.progress });
-            }
-            if (self.progress > 0.98) {
-              fetch('http://127.0.0.1:7558/ingest/b3a62563-5fc4-4448-b721-48f867c62de8',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'9d6971'},body:JSON.stringify({sessionId:'9d6971',runId:'pre-fix',hypothesisId:'H1',location:'WorkCarousel.tsx:pin',message:'work pin near complete',data:{progress:self.progress,scrollY:window.scrollY},timestamp:Date.now()})}).catch(()=>{});
             }
           },
         },

@@ -26,6 +26,9 @@ export default function Portfolio() {
   const aboutStackRef = useRef<HTMLDivElement>(null);
   const processAnchorRef = useRef<HTMLDivElement>(null);
   const techStackAnchorRef = useRef<HTMLDivElement>(null);
+  const faqMarkerRef = useRef<HTMLDivElement>(null);
+  const contactMarkerRef = useRef<HTMLDivElement>(null);
+  const toolsMarkerRef = useRef<HTMLDivElement>(null);
   // Plain, non-sticky markers placed at the top of each section, used only
   // as ScrollTrigger trigger targets. position:sticky elements make
   // unreliable ScrollTrigger triggers - once an element is stuck, its
@@ -39,8 +42,8 @@ export default function Portfolio() {
   const aboutMarkerRef = useRef<HTMLDivElement>(null);
   const processMarkerRef = useRef<HTMLDivElement>(null);
 
-  const SECTION_LABELS = ['Home', 'Work', 'About', 'Process'];
-  const SECTION_COLORS = [CYAN, LIME, ULTRAVIOLET, CYAN];
+  const SECTION_LABELS = ['Home', 'Work', 'About', 'Tools', 'Process', 'FAQ', 'Contact'];
+  const SECTION_COLORS = [CYAN, LIME, ULTRAVIOLET, CYAN, LIME, CYAN, ULTRAVIOLET];
 
   useEffect(() => {
     // Everything below is scoped inside gsap.context() so its cleanup
@@ -177,53 +180,23 @@ export default function Portfolio() {
       // each section's own scroll position rather than continuously - this
       // is discrete step state (four possible values), not a per-frame
       // value, so plain React state here is the right call.
-      const sectionMarkers = [heroMarkerRef.current, workMarkerRef.current, aboutMarkerRef.current, processMarkerRef.current];
-      const sectionNames = ['Home', 'Work', 'About', 'ProcessMarker'];
+      const sectionMarkers = [heroMarkerRef.current, workMarkerRef.current, aboutMarkerRef.current, toolsMarkerRef.current, processMarkerRef.current, faqMarkerRef.current, contactMarkerRef.current];
+      const sectionNames = ['Home', 'Work', 'About', 'Tools', 'Process', 'FAQ', 'Contact'];
       sectionMarkers.forEach((el, i) => {
         if (!el) return;
         ScrollTrigger.create({
           trigger: el,
           start: 'top center',
           end: 'bottom center',
-          onEnter: () => {
-            // #region agent log
-            const aboutEl = aboutStackRef.current;
-            const techEl = techStackAnchorRef.current;
-            const processEl = processAnchorRef.current;
-            const aboutRect = aboutEl?.getBoundingClientRect();
-            const techRect = techEl?.getBoundingClientRect();
-            fetch('http://127.0.0.1:7558/ingest/b3a62563-5fc4-4448-b721-48f867c62de8',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'9d6971'},body:JSON.stringify({sessionId:'9d6971',runId:'pre-fix',hypothesisId:'H1',location:'page.tsx:sectionMarker',message:'section marker onEnter',data:{section:sectionNames[i],index:i,scrollY:window.scrollY,vh:window.innerHeight,aboutTop:aboutRect?.top,aboutH:aboutEl?.offsetHeight,aboutWrapperH:aboutEl?.parentElement?.offsetHeight,techTop:techRect?.top,techH:techEl?.offsetHeight,processH:processEl?.offsetHeight,overlapAboutTech:aboutRect&&techRect?!(aboutRect.bottom<techRect.top||techRect.bottom<aboutRect.top):false},timestamp:Date.now()})}).catch(()=>{});
-            // #endregion
-            setActiveSection(i);
-          },
+          onEnter: () => setActiveSection(i),
           onEnterBack: () => setActiveSection(i),
         });
       });
 
-      // #region agent log
-      const dumpLayout = (why: string) => {
-        const pad = document.querySelector('[data-debug="process-pad"]') as HTMLElement | null;
-        const pinSpacers = Array.from(document.querySelectorAll('.pin-spacer')).map((el) => ({h:(el as HTMLElement).offsetHeight,top:(el as HTMLElement).getBoundingClientRect().top}));
-        fetch('http://127.0.0.1:7558/ingest/b3a62563-5fc4-4448-b721-48f867c62de8',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'9d6971'},body:JSON.stringify({sessionId:'9d6971',runId:'pre-fix',hypothesisId:'H2',location:'page.tsx:layoutDump',message:why,data:{scrollY:window.scrollY,docH:document.body.scrollHeight,vh:window.innerHeight,processPadH:pad?.offsetHeight,processPadCss:getComputedStyle(document.documentElement).getPropertyValue('--process-pad'),pinSpacers,aboutSticky:aboutStackRef.current?getComputedStyle(aboutStackRef.current).position:'n/a'},timestamp:Date.now()})}).catch(()=>{});
-      };
-      dumpLayout('layout after gsap context');
-      ScrollTrigger.create({
-        trigger: techStackAnchorRef.current,
-        start: 'top 80%',
-        end: 'bottom 20%',
-        onEnter: () => fetch('http://127.0.0.1:7558/ingest/b3a62563-5fc4-4448-b721-48f867c62de8',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'9d6971'},body:JSON.stringify({sessionId:'9d6971',runId:'pre-fix',hypothesisId:'H1',location:'page.tsx:techStack',message:'TechStack entered viewport',data:{scrollY:window.scrollY,aboutTop:aboutStackRef.current?.getBoundingClientRect().top,techTop:techStackAnchorRef.current?.getBoundingClientRect().top},timestamp:Date.now()})}).catch(()=>{}),
-        onLeave: () => fetch('http://127.0.0.1:7558/ingest/b3a62563-5fc4-4448-b721-48f867c62de8',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'9d6971'},body:JSON.stringify({sessionId:'9d6971',runId:'pre-fix',hypothesisId:'H1',location:'page.tsx:techStack',message:'TechStack left viewport',data:{scrollY:window.scrollY},timestamp:Date.now()})}).catch(()=>{}),
-      });
-      // #endregion
     });
 
     const raf = requestAnimationFrame(() => {
       ScrollTrigger.refresh();
-      // #region agent log
-      const pad = document.querySelector('[data-debug="process-pad"]') as HTMLElement | null;
-      const pinSpacers = Array.from(document.querySelectorAll('.pin-spacer')).map((el) => ({h:(el as HTMLElement).offsetHeight,top:(el as HTMLElement).getBoundingClientRect().top}));
-      fetch('http://127.0.0.1:7558/ingest/b3a62563-5fc4-4448-b721-48f867c62de8',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'9d6971'},body:JSON.stringify({sessionId:'9d6971',runId:'pre-fix',hypothesisId:'H2',location:'page.tsx:layoutDump',message:'layout after first refresh',data:{scrollY:window.scrollY,docH:document.body.scrollHeight,vh:window.innerHeight,processPadH:pad?.offsetHeight,pinSpacers},timestamp:Date.now()})}).catch(()=>{});
-      // #endregion
     });
 
     // The real fix for stale trigger positions: rather than guess at fixed
@@ -238,13 +211,7 @@ export default function Portfolio() {
     const ro = new ResizeObserver(() => {
       clearTimeout(resizeRefreshTimeout);
       resizeRefreshTimeout = setTimeout(() => {
-        // #region agent log
-        fetch('http://127.0.0.1:7558/ingest/b3a62563-5fc4-4448-b721-48f867c62de8',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'9d6971'},body:JSON.stringify({sessionId:'9d6971',runId:'pre-fix',hypothesisId:'H3',location:'page.tsx:resizeRefresh',message:'ScrollTrigger.refresh from ResizeObserver',data:{scrollY:window.scrollY,docH:document.body.scrollHeight},timestamp:Date.now()})}).catch(()=>{});
-        // #endregion
         ScrollTrigger.refresh();
-        requestAnimationFrame(() => {
-          fetch('http://127.0.0.1:7558/ingest/b3a62563-5fc4-4448-b721-48f867c62de8',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'9d6971'},body:JSON.stringify({sessionId:'9d6971',runId:'pre-fix',hypothesisId:'H3',location:'page.tsx:resizeRefresh',message:'scrollY after refresh',data:{scrollY:window.scrollY,docH:document.body.scrollHeight},timestamp:Date.now()})}).catch(()=>{});
-        });
       }, 350);
     });
     ro.observe(document.body);
@@ -260,25 +227,6 @@ export default function Portfolio() {
       if (heroMouseMoveHandler) heroRef.current?.removeEventListener('mousemove', heroMouseMoveHandler);
     };
   }, []);
-
-  // #region agent log
-  useEffect(() => {
-    const checkContactButton = () => {
-      const contact = document.getElementById('contact');
-      const btn = contact?.querySelector('button[type="submit"]') as HTMLButtonElement | null;
-      if (!btn) return;
-      const rect = btn.getBoundingClientRect();
-      const style = getComputedStyle(btn);
-      const inView = rect.top < window.innerHeight && rect.bottom > 0;
-      if (inView) {
-        fetch('http://127.0.0.1:7558/ingest/b3a62563-5fc4-4448-b721-48f867c62de8',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'9d6971'},body:JSON.stringify({sessionId:'9d6971',runId:'pre-fix',hypothesisId:'H5',location:'page.tsx:contactBtn',message:'contact submit button in view',data:{opacity:style.opacity,visibility:style.visibility,display:style.display,rectTop:rect.top,rectH:rect.height,disabled:btn.disabled,text:btn.textContent},timestamp:Date.now()})}).catch(()=>{});
-      }
-    };
-    window.addEventListener('scroll', checkContactButton, {passive:true});
-    checkContactButton();
-    return () => window.removeEventListener('scroll', checkContactButton);
-  }, []);
-  // #endregion
 
   const faqs = [
     {q: 'What\u2019s your typical timeline?', a: 'Depends on scope, but most landing pages or redesigns take two to three weeks from kickoff to launch.'},
@@ -581,22 +529,21 @@ export default function Portfolio() {
         </div>
       </div>
 
-      <div ref={processMarkerRef} />
+      <div ref={toolsMarkerRef} />
       <div ref={techStackAnchorRef}>
         <TechStack />
       </div>
 
+      <div ref={processMarkerRef} />
       <div ref={processAnchorRef}>
         <ProcessStack />
       </div>
 
-      {/* Spacer to ensure ProcessStack pin duration completes naturally before
-          page continues. Without this, the scroll distance calculation for the
-          pinned ProcessStack can overlap with Contact section, causing jarring
-          layout shifts and the "blank page then back" effect. Height here is
-          computed from ProcessStack's pin: end calculation (window.innerHeight * 5.4)
-          minus the wrapper's initial viewport height, so total scroll distance = 5.4vh. */}
-      <div data-debug="process-pad" style={{height: 'var(--process-pad)', backgroundColor: WHITE}} className="relative z-40" />
+      {/* FAQ marker */}
+      <div ref={faqMarkerRef} />
+
+      {/* Contact marker */}
+      <div ref={contactMarkerRef} />
 
       {/* Explicit white background - this section previously had none, so
           it fell through to the body's dark base colour, rendering charcoal
@@ -659,18 +606,18 @@ export default function Portfolio() {
                 empty - https://help.formspree.io/hc/en-us/articles/360013580813 */}
             <input type="text" name="_gotcha" tabIndex={-1} autoComplete="off" className="absolute left-[-9999px] w-px h-px overflow-hidden" aria-hidden="true" />
             <div className="grid md:grid-cols-2 gap-8">
-              <div>
-                <label className="block text-sm font-bold mb-3 uppercase text-white/70">Name</label>
-                <input required type="text" name="name" placeholder="Your name" className="w-full border-b-2 border-white/20 py-3 focus:outline-none transition bg-transparent font-light text-lg text-white placeholder:text-white/30" onFocus={(e) => (e.currentTarget.style.borderBottomColor = CYAN)} onBlur={(e) => (e.currentTarget.style.borderBottomColor = '')} />
-              </div>
-              <div>
-                <label className="block text-sm font-bold mb-3 uppercase text-white/70">Email</label>
-                <input required type="email" name="email" placeholder="your@email.com" className="w-full border-b-2 border-white/20 py-3 focus:outline-none transition bg-transparent font-light text-lg text-white placeholder:text-white/30" onFocus={(e) => (e.currentTarget.style.borderBottomColor = LIME)} onBlur={(e) => (e.currentTarget.style.borderBottomColor = '')} />
-              </div>
+<div>
+          <label htmlFor="contact-name" className="block text-sm font-bold mb-3 uppercase text-white/70">Name</label>
+          <input id="contact-name" required type="text" name="name" placeholder="Your name" className="w-full border-b-2 border-white/20 py-3 focus:outline-none transition bg-transparent font-light text-lg text-white placeholder:text-white/30" onFocus={(e) => (e.currentTarget.style.borderBottomColor = CYAN)} onBlur={(e) => (e.currentTarget.style.borderBottomColor = '')} />
+        </div>
+        <div>
+          <label htmlFor="contact-email" className="block text-sm font-bold mb-3 uppercase text-white/70">Email</label>
+          <input id="contact-email" required type="email" name="email" placeholder="your@email.com" className="w-full border-b-2 border-white/20 py-3 focus:outline-none transition bg-transparent font-light text-lg text-white placeholder:text-white/30" onFocus={(e) => (e.currentTarget.style.borderBottomColor = LIME)} onBlur={(e) => (e.currentTarget.style.borderBottomColor = '')} />
+        </div>
             </div>
             <div>
-              <label className="block text-sm font-bold mb-3 uppercase text-white/70">Message</label>
-              <textarea required name="message" placeholder="Tell me about your project..." rows={6} className="w-full border-b-2 border-white/20 py-3 focus:outline-none transition bg-transparent font-light text-lg text-white placeholder:text-white/30 resize-none" onFocus={(e) => (e.currentTarget.style.borderBottomColor = ULTRAVIOLET)} onBlur={(e) => (e.currentTarget.style.borderBottomColor = '')} />
+              <label htmlFor="contact-message" className="block text-sm font-bold mb-3 uppercase text-white/70">Message</label>
+              <textarea id="contact-message" required name="message" placeholder="Tell me about your project..." rows={6} className="w-full border-b-2 border-white/20 py-3 focus:outline-none transition bg-transparent font-light text-lg text-white placeholder:text-white/30 resize-none" onFocus={(e) => (e.currentTarget.style.borderBottomColor = ULTRAVIOLET)} onBlur={(e) => (e.currentTarget.style.borderBottomColor = '')} />
             </div>
             <button
               type="submit"
