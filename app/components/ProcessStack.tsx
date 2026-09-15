@@ -1,196 +1,157 @@
-'use client';
-
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useRef } from 'react';
 import gsap from 'gsap';
-import { ScrollTrigger } from 'gsap/dist/ScrollTrigger';
-
-import { CYAN, LIME, ULTRAVIOLET, CHARCOAL, SLATE, WHITE, SOFT_GRAY } from '../theme';
-
-// Icon placeholders
-const IconPlaceholder = ({ size, weight, color }: { size: number; weight: string; color: string }) => (
-  <div style={{ width: size, height: size, backgroundColor: color, borderRadius: '4px' }} />
-);
-const ChatCircleText = IconPlaceholder;
-const PenNib = IconPlaceholder;
-const Code = IconPlaceholder;
-const Checks = IconPlaceholder;
-const RocketLaunch = IconPlaceholder;
+import { ScrollTrigger } from 'gsap/ScrollTrigger';
 
 gsap.registerPlugin(ScrollTrigger);
 
-const clamp = (v: number, min = 0, max = 1) => Math.min(max, Math.max(min, v));
-const mapRange = (v: number, inMin: number, inMax: number, outMin = 0, outMax = 1) => {
-  if (inMax === inMin) return outMin;
-  const t = clamp((v - inMin) / (inMax - inMin));
-  return outMin + t * (outMax - outMin);
-};
-
-const ACCENTS = [CYAN, LIME, ULTRAVIOLET, CYAN, LIME];
-
-// Icons instead of stock photography - picsum's "seed" text doesn't
-// actually influence what photo comes back (it just deterministically
-// picks a random image), so the old img URLs were never really "relevant",
-// just plausible-sounding filenames on top of arbitrary photos. Icons are
-// both genuinely on-topic per step AND bundled at build time, so there's
-// zero risk of them failing to load over the network.
-const STEPS = [
-  { num: '01', title: 'Talk', desc: 'A real conversation about what you\u2019re actually trying to solve, who it\u2019s for, and what success looks like. No forms, no fluff.', Icon: ChatCircleText },
-  { num: '02', title: 'Mockups', desc: 'A few concrete directions to react to, not vague descriptions. You see real options before anything gets built.', Icon: PenNib },
-  { num: '03', title: 'Build & Tweak', desc: 'Development starts once a direction is locked in. You see progress as it happens, not just at the end.', Icon: Code },
-  { num: '04', title: 'Test', desc: 'Real devices, real browsers, real edge cases. If something breaks quietly, I\u2019d rather catch it than you.', Icon: Checks },
-  { num: '05', title: 'Ship', desc: 'Deployed, documented, and handed over properly. I don\u2019t disappear the moment it goes live.', Icon: RocketLaunch },
+const processSteps = [
+  { step: '01', title: 'Talk', desc: 'A real conversation about what you are trying to solve.' },
+  { step: '02', title: 'Mockups', desc: 'Concrete directions and real visual options before building.' },
+  { step: '03', title: 'Build & Tweak', desc: 'Development begins with live progress updates along the way.' },
+  { step: '04', title: 'Test', desc: 'Rigorous testing across real devices, browsers, and edge cases.' },
+  { step: '05', title: 'Ship', desc: 'Smooth deployment, clear documentation, and proper handover.' },
 ];
 
 export default function ProcessStack() {
-  const wrapperRef = useRef<HTMLDivElement>(null);
-  const headingWrapRef = useRef<HTMLDivElement>(null);
-  const cardRefs = useRef<Array<HTMLDivElement | null>>([]);
-  const [reduceMotion, setReduceMotion] = useState(false);
+  const sectionRef = useRef<HTMLDivElement | null>(null);
+  const cardsRef = useRef<(HTMLDivElement | null)[]>([]);
 
   useEffect(() => {
-    if (headingWrapRef.current) {
-      gsap.from(headingWrapRef.current.querySelectorAll('.reveal-child'), {
-        scrollTrigger: { trigger: headingWrapRef.current, start: 'top 88%' },
-        y: 28, opacity: 0, duration: 0.8, stagger: 0.12, ease: 'power4.out',
+    const cards = cardsRef.current.filter(Boolean) as HTMLDivElement[];
+    if (!cards.length || !sectionRef.current) return;
+
+    const ctx = gsap.context(() => {
+      
+      // 1. GUARANTEE INITIAL STATE: Force cards 2-5 to be completely invisible and off-screen
+      cards.forEach((card, i) => {
+        if (i !== 0) {
+          gsap.set(card, { y: window.innerHeight, opacity: 0, scale: 0.9, rotateX: -15 });
+        }
       });
-    }
-  }, []);
 
-  useEffect(() => {
-    const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-    setReduceMotion(reduce);
-    if (reduce) return;
-
-    const n = STEPS.length;
-    let ctx: gsap.Context | undefined;
-    
-    ctx = gsap.context(() => {
-      const update = (p: number) => {
-        const windows = STEPS.map((_, i) => {
-          const start = i * (1 / n) * 0.82;
-          const end = start + (1 / n) * 1.15;
-          return mapRange(p, start, end, 0, 1);
-        });
-
-        STEPS.forEach((_, i) => {
-          const entrance = windows[i];
-          let depth = 0;
-          for (let j = i + 1; j < n; j++) depth += windows[j];
-
-          const baseRotate = i % 2 === 0 ? -4 : 4;
-          const xEntrance = mapRange(entrance, 0, 1, 130, 0);
-          const xDepth = -depth * 30;
-          const yDepth = -depth * 12;
-          const scale = 1 - Math.min(depth, 3) * 0.055;
-          const rotate = baseRotate + depth * (i % 2 === 0 ? -2.5 : 2.5);
-          const opacity = mapRange(entrance, 0, 0.15, 0, 1) * (1 - Math.min(depth, 3) * 0.1);
-
-          const card = cardRefs.current[i];
-          if (!card) return;
-          gsap.set(card, { xPercent: xEntrance, x: xDepth, y: yDepth, rotate, scale, opacity });
-        });
-      };
-
-      // Initialize to progress 0 (step 1) immediately.
-      update(0);
-
-      // Create the ScrollTrigger that will drive the card stack animation.
-      gsap.to({ p: 0 }, {
-        p: 1,
-        ease: 'none',
+      // 2. Create a solid pinned timeline. end matches the timeline duration
+      // exactly (4 transitions for 5 cards) so the pin releases the instant
+      // the last card stacks — no dead scroll, no rubber-banding into FAQ.
+      const tl = gsap.timeline({
         scrollTrigger: {
-          trigger: wrapperRef.current,
+          trigger: sectionRef.current,
           start: 'top top',
-          end: () => `+=${window.innerHeight * 5.4}`,
+          end: () => `+=${window.innerHeight * (cards.length - 1)}`,
           pin: true,
-          scrub: 0.4,
+          scrub: 1,
+          anticipatePin: 1,
           invalidateOnRefresh: true,
-          onUpdate: (self) => {
-            update(self.progress);
+          onLeaveBack: () => {
+            cards.forEach((card, i) => {
+              if (i === 0) {
+                gsap.set(card, { y: 0, opacity: 1, scale: 1, rotateX: 0 });
+              } else {
+                gsap.set(card, { y: window.innerHeight, opacity: 0, scale: 0.9, rotateX: -15 });
+              }
+            });
+          },
+          onLeave: () => {
+            // Lock the final stacked state when scrolling into FAQ
+            cards.forEach((card, i) => {
+              if (i === cards.length - 1) {
+                gsap.set(card, { y: 0, opacity: 1, scale: 1, rotateX: 0 });
+              } else {
+                gsap.set(card, { y: -20, opacity: 0.4, scale: 0.94, rotateX: 0 });
+              }
+            });
           },
         },
       });
-    }, wrapperRef);
 
-    return () => {
-      ctx?.revert();
-    };
+      // 3. Build the stack sequentially
+      cards.forEach((card, index) => {
+        if (index === 0) return;
+
+        const prevCard = cards[index - 1];
+
+        // Bring the next card exactly into the center
+        tl.to(card, {
+          y: 0,
+          opacity: 1,
+          scale: 1,
+          rotateX: 0,
+          duration: 1,
+          ease: 'none', // CRITICAL FIX: 'none' stops the jumping/rubber-banding glitch on scroll
+        });
+
+        // Push the older card backwards into the shadows
+        if (prevCard) {
+          tl.to(
+            prevCard,
+            {
+              scale: 0.94,
+              y: -20,
+              opacity: 0.4, // Dim older cards slightly to emphasize the top card
+              duration: 1,
+              ease: 'none', // CRITICAL FIX
+            },
+            '<' // Runs this animation at the exact same time as the new card flying in
+          );
+        }
+      });
+
+      requestAnimationFrame(() => ScrollTrigger.refresh());
+    }, sectionRef);
+
+    return () => ctx.revert();
   }, []);
 
-  if (reduceMotion) {
-    return (
-      <section style={{ backgroundColor: WHITE }} className="relative z-30 border-t border-black/10">
-        <div className="max-w-7xl mx-auto px-4 md:px-12 pt-32 pb-16">
-          <p className="text-sm font-bold uppercase tracking-[0.25em] mb-4" style={{ color: CYAN }}>How we'll work together</p>
-          <h2 className="text-6xl md:text-7xl font-black mb-16" style={{ color: CHARCOAL }}>Process</h2>
-          <div className="grid gap-8 max-w-md">
-            {STEPS.map((step, i) => (
-              <div key={step.num} className="rounded-2xl bg-white border border-black/10 overflow-hidden flex flex-col shadow-lg">
-                <div className="relative h-40 shrink-0 flex items-center justify-center" style={{ backgroundColor: SOFT_GRAY }}>
-                  <step.Icon size={56} weight="light" color={ACCENTS[i]} />
-                  <div className="absolute top-4 right-4 w-10 h-10 rounded-full flex items-center justify-center text-sm font-black" style={{ backgroundColor: ACCENTS[i], color: CHARCOAL }}>
-                    {step.num}
-                  </div>
-                </div>
-                <div className="p-8">
-                  <div className="w-10 h-[3px] mb-5" style={{ backgroundColor: ACCENTS[i] }} />
-                  <h3 className="text-3xl font-black mb-3" style={{ color: CHARCOAL }}>{step.title}</h3>
-                  <p className="font-light leading-relaxed" style={{ color: SLATE }}>{step.desc}</p>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-    );
-  }
-
   return (
-    <section style={{ backgroundColor: WHITE }} className="relative z-30 border-t border-black/10">
-      <div ref={headingWrapRef} className="max-w-7xl mx-auto px-4 md:px-12 pt-24 md:pt-32 pb-8 flex items-end gap-6 flex-wrap">
-        <div className="reveal-child">
-          <p className="text-sm font-bold uppercase tracking-[0.25em] mb-4" style={{ color: CYAN }}>How we'll work together</p>
-          <h2 className="text-5xl sm:text-6xl md:text-7xl font-black" style={{ color: CHARCOAL }}>Process</h2>
-        </div>
-        <span
-          className="reveal-child hidden md:inline-block text-2xl -rotate-2 select-none mb-2"
-          style={{ fontFamily: 'var(--font-cursive)', color: ULTRAVIOLET, opacity: 0.85 }}
-          aria-hidden="true"
-        >
-          one step at a time
-        </span>
+    <section
+      ref={sectionRef}
+      className="relative z-30 h-screen w-full bg-white text-neutral-900 flex flex-col items-center justify-center overflow-hidden"
+    >
+      <div className="text-center mb-8 z-10">
+        <p className="text-sm uppercase tracking-widest text-neutral-500 font-semibold">
+          How we work
+        </p>
+        <h2 className="text-4xl font-extrabold text-neutral-900">Process</h2>
       </div>
 
-      <div ref={wrapperRef} className="relative h-screen w-full flex items-center justify-center overflow-hidden" style={{ backgroundColor: WHITE }}>
-        <div className="relative w-full max-w-md px-4 md:px-0 h-[580px] sm:h-[500px] md:h-[540px]" style={{ perspective: '1400px' }}>
-          {STEPS.map((step, i) => (
-            <div
-              key={step.num}
-              ref={(el) => { cardRefs.current[i] = el; }}
-              className="absolute inset-4 md:inset-0 rounded-2xl bg-white border border-black/10 overflow-hidden flex flex-col"
-              style={{
-                boxShadow: '0 30px 60px -15px rgba(0,0,0,0.22), 0 10px 20px -8px rgba(0,0,0,0.1)',
-                willChange: 'transform, opacity',
-                opacity: 0,
-              }}
-            >
-              <div className="relative h-32 sm:h-36 md:h-40 shrink-0 flex items-center justify-center" style={{ backgroundColor: SOFT_GRAY }}>
-                <step.Icon size={56} weight="light" color={ACCENTS[i]} />
-                <div
-                  className="absolute top-4 right-4 w-10 h-10 rounded-full flex items-center justify-center text-sm font-black"
-                  style={{ backgroundColor: ACCENTS[i], color: CHARCOAL }}
-                >
-                  {step.num}
-                </div>
-              </div>
-              <div className="p-6 sm:p-8 flex-1 flex flex-col justify-center min-h-0">
-                <div className="w-10 h-[3px] mb-4 sm:mb-5" style={{ backgroundColor: ACCENTS[i] }} />
-                <h3 className="text-2xl sm:text-3xl font-black mb-2 sm:mb-3" style={{ color: CHARCOAL }}>{step.title}</h3>
-                <p className="font-light leading-relaxed text-sm sm:text-base" style={{ color: SLATE }}>{step.desc}</p>
-              </div>
+      <div
+        className="relative w-full max-w-xl h-[420px] flex items-center justify-center px-4"
+        style={{ perspective: '1200px' }}
+      >
+        {processSteps.map((step, index) => (
+          <div
+            key={step.step}
+            ref={(el) => {
+              cardsRef.current[index] = el;
+            }}
+            // Base styles - GSAP takes over the rest via the useEffect above
+            className="absolute w-full h-full bg-white border border-neutral-200 rounded-2xl p-8 flex flex-col justify-between shadow-[0_25px_60px_-15px_rgba(0,0,0,0.25)]"
+            style={{
+              zIndex: index + 1,
+              transformStyle: 'preserve-3d',
+              // Hardcode Step 1 to be visible on server-side render, hide others
+              opacity: index === 0 ? 1 : 0, 
+            }}
+          >
+            <div className="flex justify-between items-center">
+              <span className="text-3xl font-mono text-neutral-400 font-bold">{step.step}</span>
+              <span className="text-xs uppercase tracking-wider px-3 py-1 bg-neutral-100 border border-neutral-200 rounded-full text-neutral-700 font-medium">
+                Phase {index + 1}
+              </span>
             </div>
-          ))}
-        </div>
+
+            <div className="my-auto">
+              <h3 className="text-2xl font-bold mb-2 text-neutral-900">{step.title}</h3>
+              <p className="text-neutral-600 text-base leading-relaxed">{step.desc}</p>
+            </div>
+
+            <div className="pt-4 border-t border-neutral-100 flex justify-between items-center text-xs text-neutral-400">
+              <span>Scroll to stack</span>
+              <span>
+                {index + 1} / {processSteps.length}
+              </span>
+            </div>
+          </div>
+        ))}
       </div>
     </section>
   );

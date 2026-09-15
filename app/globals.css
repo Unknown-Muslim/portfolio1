@@ -16,7 +16,7 @@ body {
   font-family: var(--font-body), system-ui, -apple-system, sans-serif;
   background: #141619;
   color: #181b1f;
-  overflow-x: clip;
+  overflow-x: hidden;
 }
 
 h1, h2, h3, h4, h5, h6 {

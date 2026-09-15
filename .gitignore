@@ -1,3 +1,4 @@
 node_modules
 .next/dev
 tsconfig.tsbuildinfo
+.env

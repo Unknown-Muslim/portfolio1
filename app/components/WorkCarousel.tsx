@@ -120,6 +120,8 @@ export default function WorkCarousel() {
         });
       }
 
+      requestAnimationFrame(() => ScrollTrigger.refresh());
+
       return () => {
         tween.scrollTrigger?.kill();
         tween.kill();

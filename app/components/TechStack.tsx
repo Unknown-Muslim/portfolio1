@@ -131,7 +131,7 @@ export default function TechStack() {
   }
 
   return (
-    <section className="relative z-50 py-32 px-4 md:px-12 overflow-hidden" style={{ backgroundColor: WHITE }}>
+    <section className="relative z-30 py-32 px-4 md:px-12 overflow-hidden" style={{ backgroundColor: WHITE }}>
       <div ref={containerRef} className="tech-heading max-w-7xl mx-auto mb-20">
         <p className="text-sm font-bold uppercase tracking-[0.25em] mb-4" style={{ color: SLATE }}>Tools & tech</p>
         <WordReveal text="The stack that makes it possible" className="text-5xl md:text-6xl font-black" style={{ color: CHARCOAL }} />
