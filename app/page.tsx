@@ -438,11 +438,11 @@ export default function Portfolio() {
         </div>
       </div>
 
-      <div ref={processMarkerRef} />
       <div ref={techStackAnchorRef}>
         <TechStack />
       </div>
 
+      <div ref={processMarkerRef} />
       <div ref={processAnchorRef}>
         <ProcessStack />
       </div>
